@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Surfaces ─────────────────────────────── */
+    --background:        #F5F7FC;
+    --surface:           #FFFFFF;
+    --surface-elevated:  #EAEFF8;
+
+    /* ── Borders ──────────────────────────────── */
+    --border:            #D1D9ED;
+    --border-subtle:     #E5EAF6;
+
+    /* ── Text ─────────────────────────────────── */
+    --text:              #0B0D14;
+    --text-sub:          #4E5A7A;
+    --text-muted:        #9BA5C4;
+
+    /* ── Accent (amber / gold) ────────────────── */
+    --accent:            #C8881E;
+    --accent-fg:         #FFFFFF;
+    --accent-subtle:     #FEF4E3;
+
+    /* ── Watched (teal) ───────────────────────── */
+    --watched:           #0D9488;
+    --watched-subtle:    #E6FAF5;
+
+    /* ── Rating (gold star) ───────────────────── */
+    --rating:            #D4A017;
+
+    /* ── Semantic states ──────────────────────── */
+    --error:             #DC2626;
+    --error-subtle:      #FEF2F2;
+    --success:           #059669;
+    --success-subtle:    #ECFDF5;
+
+    /* ── Overlay ──────────────────────────────── */
+    --overlay:           #0B0D1480;
+  }
+
+  .dark {
+    /* ── Surfaces ─────────────────────────────── */
+    --background:        #0B0D14;
+    --surface:           #13172B;
+    --surface-elevated:  #1C2240;
+
+    /* ── Borders ──────────────────────────────── */
+    --border:            #252D45;
+    --border-subtle:     #1A2035;
+
+    /* ── Text ─────────────────────────────────── */
+    --text:              #EEF0FF;
+    --text-sub:          #8B95AE;
+    --text-muted:        #454F6B;
+
+    /* ── Accent (amber / gold) ────────────────── */
+    --accent:            #E8A838;
+    --accent-fg:         #0B0D14;
+    --accent-subtle:     #251C0A;
+
+    /* ── Watched (teal) ───────────────────────── */
+    --watched:           #2DD4BF;
+    --watched-subtle:    #0A2218;
+
+    /* ── Rating ───────────────────────────────── */
+    --rating:            #F5C518;
+
+    /* ── Semantic states ──────────────────────── */
+    --error:             #F87171;
+    --error-subtle:      #2D1515;
+    --success:           #34D399;
+    --success-subtle:    #0A2218;
+
+    /* ── Overlay ──────────────────────────────── */
+    --overlay:           #0B0D14B3;
+  }
+}

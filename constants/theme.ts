@@ -1,53 +1,198 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Single source of truth for the app's design system.
+ *
+ * Colors here mirror the CSS variables in global.css.
+ * Use className="bg-background text-text" for NativeWind components.
+ * Use theme.colors.light / theme.colors.dark for StyleSheet / inline styles.
  */
 
-import { Platform } from 'react-native';
+/* ────────────────────────────────────────────────
+   COLOR PALETTE
+   ──────────────────────────────────────────────── */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const light = {
+  background:      '#F5F7FC',
+  surface:         '#FFFFFF',
+  surfaceElevated: '#EAEFF8',
 
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-};
+  border:          '#D1D9ED',
+  borderSubtle:    '#E5EAF6',
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+  text:            '#0B0D14',
+  textSub:         '#4E5A7A',
+  textMuted:       '#9BA5C4',
+
+  accent:          '#C8881E',
+  accentFg:        '#FFFFFF',
+  accentSubtle:    '#FEF4E3',
+
+  watched:         '#0D9488',
+  watchedSubtle:   '#E6FAF5',
+
+  rating:          '#D4A017',
+
+  error:           '#DC2626',
+  errorSubtle:     '#FEF2F2',
+  success:         '#059669',
+  successSubtle:   '#ECFDF5',
+
+  overlay:         'rgba(11, 13, 20, 0.5)',
+} as const;
+
+const dark = {
+  background:      '#0B0D14',
+  surface:         '#13172B',
+  surfaceElevated: '#1C2240',
+
+  border:          '#252D45',
+  borderSubtle:    '#1A2035',
+
+  text:            '#EEF0FF',
+  textSub:         '#8B95AE',
+  textMuted:       '#454F6B',
+
+  accent:          '#E8A838',
+  accentFg:        '#0B0D14',
+  accentSubtle:    '#251C0A',
+
+  watched:         '#2DD4BF',
+  watchedSubtle:   '#0A2218',
+
+  rating:          '#F5C518',
+
+  error:           '#F87171',
+  errorSubtle:     '#2D1515',
+  success:         '#34D399',
+  successSubtle:   '#0A2218',
+
+  overlay:         'rgba(11, 13, 20, 0.7)',
+} as const;
+
+/* ────────────────────────────────────────────────
+   FONT FAMILIES
+   These names must match the keys passed to useFonts()
+   in app/_layout.tsx.
+   ──────────────────────────────────────────────── */
+
+export const FontFamily = {
+  // Sora — headings, titles, display text
+  display:        'Sora-Bold',
+  heading:        'Sora-SemiBold',
+  headingRegular: 'Sora-Regular',
+
+  // Inter — body copy, UI labels, descriptions
+  body:           'Inter-Regular',
+  bodyMedium:     'Inter-Medium',
+  bodySemiBold:   'Inter-SemiBold',
+
+  // Space Mono — ratings, episode counts, stats, badges
+  mono:           'SpaceMono-Regular',
+  monoBold:       'SpaceMono-Bold',
+} as const;
+
+/* ────────────────────────────────────────────────
+   FONT SIZES  (4pt base grid)
+   ──────────────────────────────────────────────── */
+
+export const FontSize = {
+  xxs:  10,
+  xs:   12,
+  sm:   13,
+  base: 15,
+  md:   17,
+  lg:   20,
+  xl:   24,
+  xxl:  30,
+  xxxl: 36,
+} as const;
+
+export const LineHeight = {
+  xxs:  14,
+  xs:   16,
+  sm:   18,
+  base: 22,
+  md:   24,
+  lg:   28,
+  xl:   32,
+  xxl:  38,
+  xxxl: 44,
+} as const;
+
+/* ────────────────────────────────────────────────
+   SPACING  (4pt grid)
+   ──────────────────────────────────────────────── */
+
+export const Spacing = {
+  0.5: 2,
+  1:   4,
+  2:   8,
+  3:   12,
+  4:   16,
+  5:   20,
+  6:   24,
+  7:   28,
+  8:   32,
+  10:  40,
+  12:  48,
+  16:  64,
+  20:  80,
+  24:  96,
+} as const;
+
+/* ────────────────────────────────────────────────
+   BORDER RADIUS
+   ──────────────────────────────────────────────── */
+
+export const Radius = {
+  sm:   6,
+  md:   12,
+  lg:   16,
+  xl:   24,
+  xxl:  32,
+  full: 9999,
+} as const;
+
+/* ────────────────────────────────────────────────
+   SHADOWS  (cross-platform)
+   ──────────────────────────────────────────────── */
+
+export const Shadow = {
+  sm: {
+    shadowColor: '#0B0D14',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  md: {
+    shadowColor: '#0B0D14',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  lg: {
+    shadowColor: '#0B0D14',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
   },
-});
+} as const;
+
+/* ────────────────────────────────────────────────
+   MAIN EXPORT
+   ──────────────────────────────────────────────── */
+
+export const theme = {
+  colors: { light, dark },
+  font:   FontFamily,
+  size:   FontSize,
+  line:   LineHeight,
+  space:  Spacing,
+  radius: Radius,
+  shadow: Shadow,
+} as const;
+
+export type ColorScheme = 'light' | 'dark';
+export type ThemeColors = typeof light;
