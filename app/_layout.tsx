@@ -22,11 +22,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useColorScheme } from 'nativewind';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/hooks/useAuth';
 
-// Initialize Google Sign-in
 GoogleSignin.configure({
   webClientId: '574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com',
 });
@@ -38,33 +37,30 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const { user, initializing } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
-    'Inter-Regular':    Inter_400Regular,
-    'Inter-Medium':     Inter_500Medium,
-    'Inter-SemiBold':   Inter_600SemiBold,
-    'Sora-Regular':     Sora_400Regular,
-    'Sora-SemiBold':    Sora_600SemiBold,
-    'Sora-Bold':        Sora_700Bold,
+    'Inter-Regular':     Inter_400Regular,
+    'Inter-Medium':      Inter_500Medium,
+    'Inter-SemiBold':    Inter_600SemiBold,
+    'Sora-Regular':      Sora_400Regular,
+    'Sora-SemiBold':     Sora_600SemiBold,
+    'Sora-Bold':         Sora_700Bold,
     'SpaceMono-Regular': SpaceMono_400Regular,
-    'SpaceMono-Bold':   SpaceMono_700Bold,
+    'SpaceMono-Bold':    SpaceMono_700Bold,
   });
 
-  // Handle Authentication Routing
   useEffect(() => {
     if (initializing || !fontsLoaded) return;
 
     const inAuthGroup = segments[0] === 'login';
 
     if (!user && !inAuthGroup) {
-      // Redirect to login if not logged in
       router.replace('/login');
     } else if (user && inAuthGroup) {
-      // Redirect to home if logged in
       router.replace('/(tabs)');
     }
   }, [user, initializing, segments, fontsLoaded]);
@@ -83,7 +79,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );
 }

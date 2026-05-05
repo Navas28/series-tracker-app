@@ -1,12 +1,13 @@
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { getAuth } from '@react-native-firebase/auth';
+import { getFirestore } from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
 
-// Initialize Firestore with long polling if needed for some environments, 
-// but for native it usually works out of the box.
-export const db = firestore();
-export const firebaseAuth = auth();
+// Initialize instances using the modular API
+export const auth = getAuth();
+export const db = getFirestore();
 
 export default {
+  auth,
   db,
-  auth: firebaseAuth,
+  app: getApp(),
 };

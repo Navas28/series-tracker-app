@@ -37,6 +37,7 @@ const light = {
   successSubtle:   '#ECFDF5',
 
   overlay:         'rgba(11, 13, 20, 0.5)',
+  tint:            '#C8881E',
 } as const;
 
 const dark = {
@@ -66,6 +67,7 @@ const dark = {
   successSubtle:   '#0A2218',
 
   overlay:         'rgba(11, 13, 20, 0.7)',
+  tint:            '#E8A838',
 } as const;
 
 /* ────────────────────────────────────────────────
@@ -183,6 +185,8 @@ export const Shadow = {
 /* ────────────────────────────────────────────────
    MAIN EXPORT
    ──────────────────────────────────────────────── */
+
+export const Colors = { light, dark };
 
 export const theme = {
   colors: { light, dark },

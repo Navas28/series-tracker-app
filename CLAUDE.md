@@ -15,45 +15,10 @@ Personal app to track watched series, manage watch history, check analytics, and
 | Series data | TMDB API (free, personal key) |
 | Auth | Firebase Auth (Google Sign-In) |
 | Database | Firebase Firestore |
+| Animations | React Native Reanimated v4 + Moti |
 | Icons | Lucide React Native |
 | Language | TypeScript (strict mode) |
 | Architecture | New Architecture enabled |
-
----
-
-## Folder Structure
-
-```
-series-tracker/
-├── app/                        # Screens (Expo Router file-based routing)
-│   ├── (tabs)/                 # Bottom tab screens
-│   │   ├── _layout.tsx         # Tab bar setup
-│   │   ├── index.tsx           # Home / discover
-│   │   └── explore.tsx         # Browse / search
-│   ├── _layout.tsx             # Root layout (fonts, providers)
-│   └── modal.tsx               # Modal screen
-│
-├── components/                 # Reusable UI components
-│   ├── ui/                     # Base primitives (Button, Card, Badge, etc.)
-│   └── [feature]/              # Feature-specific components
-│
-├── constants/
-│   └── theme.ts                # Design system: colors, fonts, spacing, radius, shadow
-│
-├── hooks/                      # Custom React hooks
-├── lib/                        # API clients, Firebase setup, helpers
-├── services/                   # Data layer (TMDB queries, Firestore reads/writes)
-├── types/                      # Shared TypeScript types
-├── assets/images/              # App icons, splash screen
-│
-├── global.css                  # Tailwind directives + CSS variables (light/dark colors)
-├── tailwind.config.js          # Tailwind custom colors, fonts, spacing, radius
-├── babel.config.js             # NativeWind babel preset
-├── metro.config.js             # NativeWind metro wrapper
-├── nativewind-env.d.ts         # NativeWind TypeScript types
-├── app.json                    # Expo config (bundle IDs, Firebase plugin)
-└── .env                        # API keys (never commit)
-```
 
 ---
 
@@ -151,6 +116,18 @@ Three fonts create a clear hierarchy:
 - TMDB API key lives in `.env` as `EXPO_PUBLIC_TMDB_API_KEY`. Access via `process.env.EXPO_PUBLIC_TMDB_API_KEY`.
 - Firebase config lives in `lib/firebase.ts`.
 - All async operations use try/catch with proper error states.
+
+### Animations
+
+- Use animations and smooth effects where they improve the experience (screen transitions, list items appearing, button press feedback, loading states).
+- **Moti** — use for simple animations: fade in/out, slide, scale, pulse. Framer Motion-like API, easy to write.
+- **React Native Reanimated** (already installed) — use for complex animations: gesture-driven, shared element transitions, layout animations.
+- Framer Motion does **not** work in React Native — never use it.
+- Example Moti usage:
+  ```tsx
+  import { MotiView } from 'moti';
+  <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }} />
+  ```
 
 ### General
 
