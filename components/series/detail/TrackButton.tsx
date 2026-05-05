@@ -16,7 +16,7 @@ export default function TrackButton({ series }: Props) {
   const colors = Colors[colorScheme ?? 'light'];
   const [showPlaylists, setShowPlaylists] = useState(false);
 
-  const { data: tracking, isLoading } = useSeriesTracking(series.id);
+  const { data: tracking } = useSeriesTracking(series.id);
   const { mutate: addTracking, isPending: adding } = useAddTracking();
   const { mutate: removeTracking, isPending: removing } = useRemoveTracking();
 
@@ -38,8 +38,6 @@ export default function TrackButton({ series }: Props) {
       });
     }
   };
-
-  if (isLoading) return <View style={{ height: 52 }} />;
 
   return (
     <>

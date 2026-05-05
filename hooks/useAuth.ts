@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { 
-  onAuthStateChanged, 
-  signInWithCredential, 
+import {
+  onAuthStateChanged,
+  signInWithCredential,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
-  FirebaseAuthTypes
+  FirebaseAuthTypes,
 } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '@/lib/firebase';
@@ -14,31 +14,19 @@ export function useAuth() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
   useEffect(() => {
-    // New Modular API: onAuthStateChanged(authInstance, callback)
-    const subscriber = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       if (initializing) setInitializing(false);
     });
-    
-    return subscriber; // unsubscribe on unmount
-  }, [initializing]);
+    return unsubscribe;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signInWithGoogle = async () => {
     try {
-      // Check if your device supports Google Play
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      
-      // Get the users ID token
       const { data } = await GoogleSignin.signIn();
-      
-      if (!data?.idToken) {
-        throw new Error('No ID token found');
-      }
-
-      // Create a Google credential with the token
+      if (!data?.idToken) throw new Error('No ID token found');
       const credential = GoogleAuthProvider.credential(data.idToken);
-
-      // Sign-in the user with the credential
       return signInWithCredential(auth, credential);
     } catch (error) {
       console.error('Google Sign-In Error:', error);
@@ -55,10 +43,5 @@ export function useAuth() {
     }
   };
 
-  return {
-    user,
-    initializing,
-    signInWithGoogle,
-    signOut,
-  };
+  return { user, initializing, signInWithGoogle, signOut };
 }

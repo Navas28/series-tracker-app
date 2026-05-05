@@ -9,8 +9,17 @@ interface Props {
 
 export default function EpisodeTracker({ series }: Props) {
   const { data: tracking } = useSeriesTracking(series.id);
-  const { mutate: toggleEpisode } = useToggleEpisode(series.id);
-  const { mutate: markSeason } = useMarkSeason(series.id);
+  const trackingInput = {
+    seriesId: series.id,
+    name: series.name,
+    posterPath: series.poster_path,
+    backdropPath: series.backdrop_path,
+    tmdbStatus: series.status,
+    totalSeasons: series.number_of_seasons,
+    totalEpisodes: series.number_of_episodes,
+  };
+  const { mutate: toggleEpisode } = useToggleEpisode(trackingInput);
+  const { mutate: markSeason } = useMarkSeason(trackingInput);
 
   const visibleSeasons = series.seasons.filter(s => s.season_number > 0);
   if (visibleSeasons.length === 0) return null;

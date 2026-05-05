@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeasonDetails } from '@/hooks/useSeries';
 import { countWatchedInSeason } from '@/services/firestore/tracking';
+import { formatEpisodeAirDate } from '@/utils/date';
 import type { Season } from '@/services/tmdb/types';
 import type { SeriesTracking } from '@/services/firestore/tracking';
 
@@ -54,7 +55,7 @@ export default function SeasonRow({
           </View>
 
           <View className="flex-row items-center" style={{ gap: 10 }}>
-            {tracking && total > 0 && (
+            {total > 0 && (
               <TouchableOpacity
                 onPress={() => onMarkSeason(season.season_number, total, allWatched)}
                 hitSlop={10}
@@ -109,24 +110,22 @@ export default function SeasonRow({
                   <Text className="font-body-medium text-xs text-text" numberOfLines={1}>
                     {ep.name}
                   </Text>
-                  {ep.air_date && (
-                    <Text className="font-body text-2xs text-text-muted mt-0.5">{ep.air_date}</Text>
+                  {formatEpisodeAirDate(ep.air_date) && (
+                    <Text className="font-body text-[10px] text-accent mt-0.5">
+                      {formatEpisodeAirDate(ep.air_date)}
+                    </Text>
                   )}
                 </View>
-                {tracking ? (
-                  <TouchableOpacity
-                    onPress={() => onToggleEpisode(season.season_number, ep.episode_number)}
-                    hitSlop={10}
-                  >
-                    {isWatched ? (
-                      <CheckCircle2 size={20} color={colors.watched} strokeWidth={1.75} />
-                    ) : (
-                      <Circle size={20} color={colors.textMuted} strokeWidth={1.75} />
-                    )}
-                  </TouchableOpacity>
-                ) : (
-                  <Circle size={20} color={colors.border} strokeWidth={1.5} />
-                )}
+                <TouchableOpacity
+                  onPress={() => onToggleEpisode(season.season_number, ep.episode_number)}
+                  hitSlop={10}
+                >
+                  {isWatched ? (
+                    <CheckCircle2 size={20} color={colors.watched} strokeWidth={1.75} />
+                  ) : (
+                    <Circle size={20} color={colors.textMuted} strokeWidth={1.75} />
+                  )}
+                </TouchableOpacity>
               </MotiView>
             );
           })}

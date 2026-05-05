@@ -44,24 +44,29 @@ export function useRemoveTracking() {
   });
 }
 
-export function useToggleEpisode(seriesId: number) {
+export function useToggleEpisode(series: Tracking.TrackingInput) {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ seasonNum, episodeNum }: { seasonNum: number; episodeNum: number }) =>
-      Tracking.toggleEpisode(user!.uid, seriesId, seasonNum, episodeNum),
+    mutationFn: async ({ seasonNum, episodeNum }: { seasonNum: number; episodeNum: number }) => {
+      const existing = await Tracking.getTracking(user!.uid, series.seriesId);
+      if (!existing) {
+        await Tracking.addTracking(user!.uid, series);
+      }
+      return Tracking.toggleEpisode(user!.uid, series.seriesId, seasonNum, episodeNum);
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tracking', user?.uid, seriesId] });
+      qc.invalidateQueries({ queryKey: ['tracking', user?.uid, series.seriesId] });
       qc.invalidateQueries({ queryKey: ['tracking', user?.uid] });
     },
   });
 }
 
-export function useMarkSeason(seriesId: number) {
+export function useMarkSeason(series: Tracking.TrackingInput) {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       seasonNum,
       episodeCount,
       unwatch,
@@ -69,12 +74,17 @@ export function useMarkSeason(seriesId: number) {
       seasonNum: number;
       episodeCount: number;
       unwatch: boolean;
-    }) =>
-      unwatch
-        ? Tracking.markSeasonUnwatched(user!.uid, seriesId, seasonNum)
-        : Tracking.markSeasonWatched(user!.uid, seriesId, seasonNum, episodeCount),
+    }) => {
+      const existing = await Tracking.getTracking(user!.uid, series.seriesId);
+      if (!existing) {
+        await Tracking.addTracking(user!.uid, series);
+      }
+      return unwatch
+        ? Tracking.markSeasonUnwatched(user!.uid, series.seriesId, seasonNum)
+        : Tracking.markSeasonWatched(user!.uid, series.seriesId, seasonNum, episodeCount);
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tracking', user?.uid, seriesId] });
+      qc.invalidateQueries({ queryKey: ['tracking', user?.uid, series.seriesId] });
       qc.invalidateQueries({ queryKey: ['tracking', user?.uid] });
     },
   });

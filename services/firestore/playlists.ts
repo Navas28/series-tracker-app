@@ -1,6 +1,6 @@
 import {
-  doc,
   collection,
+  doc,
   getDoc,
   getDocs,
   addDoc,
@@ -22,8 +22,11 @@ export interface Playlist {
   series: PlaylistSeries[];
 }
 
-const playlistsCol = (userId: string) => collection(db, 'users', userId, 'playlists');
-const playlistDoc = (userId: string, id: string) => doc(db, 'users', userId, 'playlists', id);
+const playlistsCol = (userId: string) =>
+  collection(db, 'users', userId, 'playlists');
+
+const playlistRef = (userId: string, id: string) =>
+  doc(db, 'users', userId, 'playlists', id);
 
 export async function getPlaylists(userId: string): Promise<Playlist[]> {
   const snap = await getDocs(playlistsCol(userId));
@@ -44,7 +47,7 @@ export async function createPlaylist(userId: string, name: string): Promise<stri
 }
 
 export async function deletePlaylist(userId: string, playlistId: string): Promise<void> {
-  await deleteDoc(playlistDoc(userId, playlistId));
+  await deleteDoc(playlistRef(userId, playlistId));
 }
 
 export async function addSeriesToPlaylist(
@@ -52,7 +55,7 @@ export async function addSeriesToPlaylist(
   playlistId: string,
   series: PlaylistSeries,
 ): Promise<void> {
-  const ref = playlistDoc(userId, playlistId);
+  const ref = playlistRef(userId, playlistId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
   const data = snap.data() as Playlist;
@@ -65,7 +68,7 @@ export async function removeSeriesFromPlaylist(
   playlistId: string,
   seriesId: number,
 ): Promise<void> {
-  const ref = playlistDoc(userId, playlistId);
+  const ref = playlistRef(userId, playlistId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
   const data = snap.data() as Playlist;

@@ -4,12 +4,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeriesDetails } from '@/hooks/useSeries';
+import { useSeriesTracking } from '@/hooks/useTracking';
 import SeriesHero from '@/components/series/detail/SeriesHero';
 import TrackButton from '@/components/series/detail/TrackButton';
 import EpisodeTracker from '@/components/series/detail/EpisodeTracker';
 import SeriesCastRow from '@/components/series/detail/SeriesCastRow';
 import SeriesWatchProviders from '@/components/series/detail/SeriesWatchProviders';
+import CompletionMilestone from '@/components/series/detail/CompletionMilestone';
 import SeriesRow from '@/components/series/SeriesRow';
+import { useState, useEffect } from 'react';
 
 export default function SeriesDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,6 +20,22 @@ export default function SeriesDetailScreen() {
   const colors = Colors[colorScheme ?? 'light'];
 
   const { data: series, isLoading, isError } = useSeriesDetails(Number(id));
+  const { data: tracking } = useSeriesTracking(Number(id));
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [wasCompleted, setWasCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (tracking && series) {
+      const watchedCount = Object.keys(tracking.watched).length;
+      const total = series.number_of_episodes;
+      const isCurrentlyCompleted = total > 0 && watchedCount >= total;
+
+      if (wasCompleted === false && isCurrentlyCompleted) {
+        setShowMilestone(true);
+      }
+      setWasCompleted(isCurrentlyCompleted);
+    }
+  }, [tracking, series, wasCompleted]);
 
   return (
     <>
@@ -56,6 +75,11 @@ export default function SeriesDetailScreen() {
           )}
         </ScrollView>
       )}
+
+      <CompletionMilestone
+        visible={showMilestone}
+        onHide={() => setShowMilestone(false)}
+      />
     </>
   );
 }

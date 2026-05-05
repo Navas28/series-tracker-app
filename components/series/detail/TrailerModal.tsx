@@ -48,6 +48,12 @@ export default function TrailerModal({ visible, onClose, videoKey }: Props) {
             play={playing}
             videoId={videoKey}
             onChangeState={onStateChange}
+            initialPlayerParams={{
+              modestbranding: true,
+              rel: false,
+              iv_load_policy: 3,
+              cc_load_policy: 0,
+            }}
           />
         </View>
       </View>
