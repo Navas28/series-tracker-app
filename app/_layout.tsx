@@ -1,6 +1,7 @@
 import '../global.css';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -25,6 +26,9 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useColorScheme } from 'nativewind';
 
 import { useAuth } from '@/hooks/useAuth';
+import { View } from 'react-native';
+
+const queryClient = new QueryClient();
 
 GoogleSignin.configure({
   webClientId: '574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com',
@@ -74,12 +78,16 @@ export default function RootLayout() {
   if (!fontsLoaded || initializing) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <View className={colorScheme === 'dark' ? 'dark' : ''} style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
