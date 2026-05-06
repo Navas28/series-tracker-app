@@ -70,10 +70,12 @@ export function useMarkSeason(series: Tracking.TrackingInput) {
       seasonNum,
       episodeCount,
       unwatch,
+      seasonEpisodeCounts,
     }: {
       seasonNum: number;
       episodeCount: number;
       unwatch: boolean;
+      seasonEpisodeCounts?: Record<number, number>;
     }) => {
       const existing = await Tracking.getTracking(user!.uid, series.seriesId);
       if (!existing) {
@@ -81,7 +83,13 @@ export function useMarkSeason(series: Tracking.TrackingInput) {
       }
       return unwatch
         ? Tracking.markSeasonUnwatched(user!.uid, series.seriesId, seasonNum)
-        : Tracking.markSeasonWatched(user!.uid, series.seriesId, seasonNum, episodeCount);
+        : Tracking.markSeasonWatched(
+            user!.uid,
+            series.seriesId,
+            seasonNum,
+            episodeCount,
+            seasonEpisodeCounts,
+          );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracking', user?.uid, series.seriesId] });

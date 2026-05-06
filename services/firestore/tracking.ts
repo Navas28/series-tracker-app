@@ -24,7 +24,6 @@ export interface SeriesTracking {
 
 export type TrackingInput = Omit<SeriesTracking, 'addedAt' | 'lastWatchedAt' | 'watched'>;
 
-// Helper: document reference for a specific tracked series
 const trackingRef = (userId: string, seriesId: number) =>
   doc(db, 'users', userId, 'tracking', String(seriesId));
 
@@ -57,7 +56,6 @@ export async function addTracking(userId: string, input: TrackingInput): Promise
   try {
     const ref = trackingRef(userId, input.seriesId);
     const snap = await getDoc(ref);
-    // Only create if it doesn't exist — preserve any existing watched progress
     if (snap.exists()) return;
     await setDoc(ref, {
       ...input,
@@ -80,6 +78,11 @@ export async function removeTracking(userId: string, seriesId: number): Promise<
   }
 }
 
+/**
+ * Toggle a single episode watched state.
+ * When marking as WATCHED: also marks all earlier episodes in the same season (1 → episodeNum-1).
+ * When marking as UNWATCHED: only unmarks that specific episode.
+ */
 export async function toggleEpisode(
   userId: string,
   seriesId: number,
@@ -93,11 +96,17 @@ export async function toggleEpisode(
     const data = snap.data() as SeriesTracking;
     const key = `S${seasonNum}E${episodeNum}`;
     const newWatched = { ...data.watched };
+
     if (newWatched[key]) {
+      // Unmark only this episode
       delete newWatched[key];
     } else {
-      newWatched[key] = true;
+      // Mark this episode + all earlier episodes in same season as watched
+      for (let ep = 1; ep <= episodeNum; ep++) {
+        newWatched[`S${seasonNum}E${ep}`] = true;
+      }
     }
+
     await updateDoc(ref, { watched: newWatched, lastWatchedAt: Date.now() });
   } catch (e) {
     console.error('[toggleEpisode] error:', e);
@@ -105,11 +114,16 @@ export async function toggleEpisode(
   }
 }
 
+/**
+ * Mark all episodes in a season (and all previous seasons) as watched.
+ * seasonEpisodeCounts: map of seasonNum → episodeCount for all seasons up to and including this one.
+ */
 export async function markSeasonWatched(
   userId: string,
   seriesId: number,
   seasonNum: number,
   episodeCount: number,
+  seasonEpisodeCounts?: Record<number, number>,
 ): Promise<void> {
   try {
     const ref = trackingRef(userId, seriesId);
@@ -117,9 +131,24 @@ export async function markSeasonWatched(
     if (!snap.exists()) return;
     const data = snap.data() as SeriesTracking;
     const newWatched = { ...data.watched };
+
+    // Mark all prior seasons if their episode counts are provided
+    if (seasonEpisodeCounts) {
+      for (const [sNum, sCount] of Object.entries(seasonEpisodeCounts)) {
+        const n = Number(sNum);
+        if (n < seasonNum) {
+          for (let ep = 1; ep <= sCount; ep++) {
+            newWatched[`S${n}E${ep}`] = true;
+          }
+        }
+      }
+    }
+
+    // Mark all episodes in the target season
     for (let i = 1; i <= episodeCount; i++) {
       newWatched[`S${seasonNum}E${i}`] = true;
     }
+
     await updateDoc(ref, { watched: newWatched, lastWatchedAt: Date.now() });
   } catch (e) {
     console.error('[markSeasonWatched] error:', e);

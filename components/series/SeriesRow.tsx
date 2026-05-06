@@ -4,6 +4,7 @@ import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import SeriesCard from './SeriesCard';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 import type { SeriesListItem } from '@/services/tmdb/types';
 
 interface Props {
@@ -13,24 +14,9 @@ interface Props {
   onSeeAll?: () => void;
 }
 
-function CardSkeleton() {
-  return (
-    <MotiView
-      from={{ opacity: 0.3 }}
-      animate={{ opacity: 0.8 }}
-      transition={{ loop: true, type: 'timing', duration: 900 }}
-      style={{ width: 120 }}
-    >
-      <View className="rounded-md bg-surface-elevated" style={{ aspectRatio: 2 / 3 }} />
-      <View className="h-3 bg-surface-elevated rounded mt-2 w-4/5" />
-      <View className="h-2.5 bg-surface-elevated rounded mt-1 w-1/2" />
-    </MotiView>
-  );
-}
-
 export default function SeriesRow({ title, items, isLoading, onSeeAll }: Props) {
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? 'dark'];
 
   return (
     <View className="mb-7">
@@ -53,8 +39,17 @@ export default function SeriesRow({ title, items, isLoading, onSeeAll }: Props) 
         contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
       >
         {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-          : items?.map(item => <SeriesCard key={item.id} item={item} />)}
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          : items?.map((item, index) => (
+              <MotiView
+                key={item.id}
+                from={{ opacity: 0, translateX: 12 }}
+                animate={{ opacity: 1, translateX: 0 }}
+                transition={{ type: 'timing', duration: 320, delay: Math.min(index, 5) * 50 }}
+              >
+                <SeriesCard item={item} />
+              </MotiView>
+            ))}
       </ScrollView>
     </View>
   );

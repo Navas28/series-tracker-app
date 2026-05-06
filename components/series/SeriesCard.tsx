@@ -1,6 +1,7 @@
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { MotiView } from 'moti';
 import { getImageUrl } from '@/services/tmdb/client';
 import type { SeriesListItem } from '@/services/tmdb/types';
 
@@ -18,8 +19,9 @@ export default function SeriesCard({ item, width = 120 }: Props) {
       activeOpacity={0.75}
       style={{ width }}
     >
+      {/* Poster */}
       <View
-        className="rounded-md overflow-hidden bg-surface-elevated"
+        className="rounded-xl overflow-hidden bg-surface-elevated"
         style={{ aspectRatio: 2 / 3 }}
       >
         {imageUrl ? (
@@ -31,15 +33,26 @@ export default function SeriesCard({ item, width = 120 }: Props) {
           />
         ) : (
           <View className="flex-1 items-center justify-center px-2">
-            <Text className="font-body text-2xs text-text-muted text-center">{item.name}</Text>
+            <Text className="font-body text-2xs text-text-muted text-center">
+              {item.name}
+            </Text>
           </View>
         )}
+
+        {/* Rating badge — inside poster, top-left */}
         {item.vote_average > 0 && (
-          <View className="absolute top-1.5 left-1.5 bg-black/60 rounded px-1.5 py-0.5">
-            <Text className="font-mono-bold text-2xs text-rating">★ {item.vote_average.toFixed(1)}</Text>
+          <View
+            className="absolute top-2 left-2 rounded-md px-1.5 py-0.5"
+            style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}
+          >
+            <Text className="font-mono-bold text-2xs text-rating">
+              ★ {item.vote_average.toFixed(1)}
+            </Text>
           </View>
         )}
       </View>
+
+      {/* Metadata */}
       <Text className="font-body-medium text-xs text-text mt-1.5" numberOfLines={1}>
         {item.name}
       </Text>

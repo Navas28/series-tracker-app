@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
@@ -6,12 +6,15 @@ import { Sun, Moon, BarChart2, Bell, ChevronRight, LogOut } from 'lucide-react-n
 import { useColorScheme } from 'nativewind';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors } from '@/constants/theme';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
+
+  const [signOutModal, setSignOutModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -123,7 +126,7 @@ export default function ProfileScreen() {
           >
             <TouchableOpacity
               className="flex-row items-center justify-center rounded-xl border border-error py-4"
-              onPress={handleLogout}
+              onPress={() => setSignOutModal(true)}
               activeOpacity={0.8}
             >
               <LogOut size={18} color={colors.error} strokeWidth={1.5} />
@@ -131,9 +134,19 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </MotiView>
 
-          <Text className="font-mono text-xs text-text-muted text-center py-6">Version 1.0.0 (Beta)</Text>
+        <Text className="font-mono text-xs text-text-muted text-center py-6">BINGE | Version 1.0.0 (Beta)</Text>
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={signOutModal}
+        onClose={() => setSignOutModal(false)}
+        onConfirm={handleLogout}
+        title="Sign Out"
+        message="Are you sure you want to sign out of Binge?"
+        confirmLabel="Sign Out"
+        variant="danger"
+      />
     </SafeAreaView>
   );
 }

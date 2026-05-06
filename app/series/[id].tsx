@@ -79,6 +79,9 @@ export default function SeriesDetailScreen() {
       <CompletionMilestone
         visible={showMilestone}
         onHide={() => setShowMilestone(false)}
+        seriesName={series?.name}
+        totalEpisodes={series?.number_of_episodes}
+        totalSeasons={series?.number_of_seasons}
       />
     </>
   );

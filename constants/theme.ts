@@ -11,63 +11,63 @@
    ──────────────────────────────────────────────── */
 
 const light = {
-  background:      '#F5F7FC',
-  surface:         '#FFFFFF',
-  surfaceElevated: '#EAEFF8',
+  background:      '#f4f6fb',
+  surface:         '#ffffff',
+  surfaceElevated: '#e8eef7',
 
-  border:          '#D1D9ED',
-  borderSubtle:    '#E5EAF6',
+  border:          '#c2cedf',
+  borderSubtle:    '#d8e2ef',
 
-  text:            '#0B0D14',
-  textSub:         '#4E5A7A',
-  textMuted:       '#9BA5C4',
+  text:            '#010d23',
+  textSub:         '#455f82',
+  textMuted:       '#8ba0b8',
 
-  accent:          '#C8881E',
-  accentFg:        '#FFFFFF',
-  accentSubtle:    '#FEF4E3',
+  accent:          '#c86c36',
+  accentFg:        '#ffffff',
+  accentSubtle:    '#fdf0e6',
 
-  watched:         '#0D9488',
-  watchedSubtle:   '#E6FAF5',
+  watched:         '#3a5272',
+  watchedSubtle:   '#e4eaf4',
 
-  rating:          '#D4A017',
+  rating:          '#c86c36',
 
-  error:           '#DC2626',
-  errorSubtle:     '#FEF2F2',
-  success:         '#059669',
-  successSubtle:   '#ECFDF5',
+  error:           '#c0392b',
+  errorSubtle:     '#fdecea',
+  success:         '#1e7e5e',
+  successSubtle:   '#e6f5ef',
 
-  overlay:         'rgba(11, 13, 20, 0.5)',
-  tint:            '#C8881E',
+  overlay:         'rgba(1, 13, 35, 0.5)',
+  tint:            '#c86c36',
 } as const;
 
 const dark = {
-  background:      '#0B0D14',
-  surface:         '#13172B',
-  surfaceElevated: '#1C2240',
+  background:      '#010d23',
+  surface:         '#0f1a2e',
+  surfaceElevated: '#1a2d47',
 
-  border:          '#252D45',
-  borderSubtle:    '#1A2035',
+  border:          '#22293c',
+  borderSubtle:    '#162035',
 
-  text:            '#EEF0FF',
-  textSub:         '#8B95AE',
-  textMuted:       '#454F6B',
+  text:            '#f0f4ff',
+  textSub:         '#8ba0b8',
+  textMuted:       '#455f82',
 
-  accent:          '#E8A838',
-  accentFg:        '#0B0D14',
-  accentSubtle:    '#251C0A',
+  accent:          '#ed8130',
+  accentFg:        '#010d23',
+  accentSubtle:    '#1f1510',
 
-  watched:         '#2DD4BF',
-  watchedSubtle:   '#0A2218',
+  watched:         '#5f7387',
+  watchedSubtle:   '#0d1829',
 
-  rating:          '#F5C518',
+  rating:          '#eb7f23',
 
-  error:           '#F87171',
-  errorSubtle:     '#2D1515',
-  success:         '#34D399',
-  successSubtle:   '#0A2218',
+  error:           '#e05c5c',
+  errorSubtle:     '#1f0d0d',
+  success:         '#2ecc8a',
+  successSubtle:   '#061a12',
 
-  overlay:         'rgba(11, 13, 20, 0.7)',
-  tint:            '#E8A838',
+  overlay:         'rgba(1, 13, 35, 0.7)',
+  tint:            '#ed8130',
 } as const;
 
 /* ────────────────────────────────────────────────

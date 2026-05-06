@@ -24,6 +24,12 @@ export default function EpisodeTracker({ series }: Props) {
   const visibleSeasons = series.seasons.filter(s => s.season_number > 0);
   if (visibleSeasons.length === 0) return null;
 
+  // Build a map of seasonNum → episodeCount for all visible seasons
+  const seasonEpisodeCounts: Record<number, number> = {};
+  visibleSeasons.forEach(s => {
+    seasonEpisodeCounts[s.season_number] = s.episode_count;
+  });
+
   return (
     <View className="mb-7">
       <Text className="font-heading text-base text-text px-5 mb-3">
@@ -39,7 +45,7 @@ export default function EpisodeTracker({ series }: Props) {
             toggleEpisode({ seasonNum: sNum, episodeNum: epNum })
           }
           onMarkSeason={(sNum, epCount, unwatch) =>
-            markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch })
+            markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch, seasonEpisodeCounts })
           }
         />
       ))}

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { router } from 'expo-router';
 import { getImageUrl } from '@/services/tmdb/client';
+import { SkeletonBanner } from '@/components/ui/Skeleton';
 import type { SeriesListItem } from '@/services/tmdb/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -18,20 +19,15 @@ interface Props {
 export default function TrendingBanner({ items, isLoading }: Props) {
   if (isLoading) {
     return (
-      <View className="px-5 mb-7">
-        <View className="h-4 bg-surface-elevated rounded w-40 mb-3" />
-        <MotiView
-          from={{ opacity: 0.3 }}
-          animate={{ opacity: 0.8 }}
-          transition={{ loop: true, type: 'timing', duration: 900 }}
-          className="rounded-xl bg-surface-elevated"
-          style={{ height: CARD_HEIGHT }}
-        />
+      <View className="mb-7">
+        <View className="h-4 bg-surface-elevated rounded w-40 mx-5 mb-3" />
+        <SkeletonBanner height={CARD_HEIGHT} />
       </View>
     );
   }
 
   const topItems = items?.slice(0, 10) ?? [];
+
 
   return (
     <View className="mb-7">

@@ -26,29 +26,29 @@ Personal app to track watched series, manage watch history, check analytics, and
 
 Single source of truth: `constants/theme.ts` + `global.css` + `tailwind.config.js`
 
-### Color Palette — "Cinescape"
+### Color Palette — "Logo DNA"
 
 CSS variables defined in `global.css` auto-switch between light and dark.
 Use them directly as Tailwind classes — no `dark:` prefix needed.
 
 | Token | Light | Dark | Usage |
 |---|---|---|---|
-| `background` | `#F5F7FC` | `#0B0D14` | Screen backgrounds |
-| `surface` | `#FFFFFF` | `#13172B` | Cards, sheets |
-| `surface-elevated` | `#EAEFF8` | `#1C2240` | Modals, popovers |
-| `border` | `#D1D9ED` | `#252D45` | Dividers, outlines |
-| `border-subtle` | `#E5EAF6` | `#1A2035` | Subtle separators |
-| `text` | `#0B0D14` | `#EEF0FF` | Primary text |
-| `text-sub` | `#4E5A7A` | `#8B95AE` | Secondary labels |
-| `text-muted` | `#9BA5C4` | `#454F6B` | Placeholders |
-| `accent` | `#C8881E` | `#E8A838` | Brand color (amber/gold) |
-| `accent-fg` | `#FFFFFF` | `#0B0D14` | Text on accent bg |
-| `accent-subtle` | `#FEF4E3` | `#251C0A` | Accent-tinted surfaces |
-| `watched` | `#0D9488` | `#2DD4BF` | Watched state (teal) |
-| `watched-subtle` | `#E6FAF5` | `#0A2218` | Watched background |
-| `rating` | `#D4A017` | `#F5C518` | Star ratings (gold) |
-| `error` | `#DC2626` | `#F87171` | Errors |
-| `success` | `#059669` | `#34D399` | Success states |
+| `background` | `#f4f6fb` | `#010d23` | Screen backgrounds |
+| `surface` | `#ffffff` | `#0f1a2e` | Cards, sheets |
+| `surface-elevated` | `#e8eef7` | `#1a2d47` | Modals, popovers |
+| `border` | `#c2cedf` | `#22293c` | Dividers, outlines |
+| `border-subtle` | `#d8e2ef` | `#162035` | Subtle separators |
+| `text` | `#010d23` | `#f0f4ff` | Primary text |
+| `text-sub` | `#455f82` | `#8ba0b8` | Secondary labels |
+| `text-muted` | `#8ba0b8` | `#455f82` | Placeholders |
+| `accent` | `#c86c36` | `#ed8130` | Brand orange (from logo rim) |
+| `accent-fg` | `#ffffff` | `#010d23` | Text on accent bg |
+| `accent-subtle` | `#fdf0e6` | `#1f1510` | Accent-tinted surfaces |
+| `watched` | `#3a5272` | `#5f7387` | Watched state (slate blue from logo) |
+| `watched-subtle` | `#e4eaf4` | `#0d1829` | Watched background |
+| `rating` | `#c86c36` | `#eb7f23` | Star ratings (warm orange) |
+| `error` | `#c0392b` | `#e05c5c` | Errors |
+| `success` | `#1e7e5e` | `#2ecc8a` | Success states |
 
 ### Fonts
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { X, Plus, Check } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
@@ -56,9 +57,10 @@ export default function AddToPlaylistModal({ visible, onClose, series }: Props) 
               <ActivityIndicator color={colors.accent} style={{ marginVertical: 20 }} />
             )}
 
-            <FlatList
+            <FlashList
               data={playlists}
               keyExtractor={p => p.id}
+              estimatedItemSize={60}
               showsVerticalScrollIndicator={false}
               renderItem={({ item: playlist }) => {
                 const alreadyIn =

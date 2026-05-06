@@ -26,6 +26,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useColorScheme } from 'nativewind';
 
 import { useAuth } from '@/hooks/useAuth';
+import { ToastProvider } from '@/components/ui/Toast';
 import { View } from 'react-native';
 
 const queryClient = new QueryClient();
@@ -80,13 +81,16 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <View className={colorScheme === 'dark' ? 'dark' : ''} style={{ flex: 1 }}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-          </Stack>
-        </View>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <ToastProvider>
+          <View className={colorScheme === 'dark' ? 'dark' : ''} style={{ flex: 1 }}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+              <Stack.Screen name="series/view-all" options={{ headerShown: false }} />
+            </Stack>
+          </View>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </ToastProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

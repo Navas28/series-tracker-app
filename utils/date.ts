@@ -19,3 +19,16 @@ export function formatEpisodeAirDate(dateStr: string | null): string | null {
   // Format as date for far future
   return airDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+/**
+ * Returns true if the given air date string has already passed (or is today).
+ * Returns false if the date is in the future or if dateStr is null/empty (unknown).
+ */
+export function isReleased(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const airDate = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  airDate.setHours(0, 0, 0, 0);
+  return airDate <= today;
+}
