@@ -4,7 +4,6 @@ import { ListMusic } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import { getImageUrl } from '@/services/tmdb/client';
 import type { Playlist } from '@/services/firestore/playlists';
 
 interface Props {
@@ -27,7 +26,7 @@ export default function PlaylistCard({ playlist }: Props) {
           <View className="flex-row flex-wrap" style={{ width: 96 }}>
             {[0, 1, 2, 3].map(i => {
               const item = previews[i];
-              const url = item ? getImageUrl(item.posterPath, 'w185') : null;
+              const url = item?.posterUrl ?? null;
               return (
                 <View key={i} className="bg-surface-elevated" style={{ width: 48, height: 36 }}>
                   {url ? (

@@ -15,7 +15,7 @@ import {
 } from '@/hooks/useSeries';
 import SeriesCard from '@/components/series/SeriesCard';
 import { SkeletonGrid } from '@/components/ui/Skeleton';
-import type { SeriesListItem } from '@/services/tmdb/types';
+import type { ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const COLUMNS = 3;
@@ -42,7 +42,7 @@ export default function ViewAllScreen() {
   const airing     = useAiringTodaySeries();
   const onTheAir   = useOnTheAirSeries();
 
-  let items: SeriesListItem[] = [];
+  let items: ShowListItem[] = [];
   let isLoading = false;
   let fetchNextPage: (() => void) | undefined;
   let hasNextPage = false;
@@ -74,7 +74,7 @@ export default function ViewAllScreen() {
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const renderItem = useCallback(({ item, index }: { item: SeriesListItem; index: number }) => (
+  const renderItem = useCallback(({ item, index }: { item: ShowListItem; index: number }) => (
     <MotiView
       from={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}

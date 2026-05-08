@@ -5,10 +5,10 @@ import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeriesTracking, useAddTracking, useRemoveTracking } from '@/hooks/useTracking';
 import AddToPlaylistModal from '@/components/playlists/AddToPlaylistModal';
-import type { SeriesDetails } from '@/services/tmdb/types';
+import type { ShowDetails } from '@/services/api/types';
 
 interface Props {
-  series: SeriesDetails;
+  series: ShowDetails;
 }
 
 export default function TrackButton({ series }: Props) {
@@ -30,9 +30,9 @@ export default function TrackButton({ series }: Props) {
       addTracking({
         seriesId: series.id,
         name: series.name,
-        posterPath: series.poster_path,
-        backdropPath: series.backdrop_path,
-        tmdbStatus: series.status,
+        posterUrl: series.poster_path,
+        backdropUrl: series.backdrop_path,
+        status: series.status,
         totalSeasons: series.number_of_seasons,
         totalEpisodes: series.number_of_episodes,
       });
@@ -79,7 +79,7 @@ export default function TrackButton({ series }: Props) {
       <AddToPlaylistModal
         visible={showPlaylists}
         onClose={() => setShowPlaylists(false)}
-        series={{ seriesId: series.id, name: series.name, posterPath: series.poster_path }}
+        series={{ seriesId: series.id, name: series.name, posterUrl: series.poster_path }}
       />
     </>
   );

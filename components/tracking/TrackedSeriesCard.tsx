@@ -1,25 +1,22 @@
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { getImageUrl } from '@/services/tmdb/client';
 import { type SeriesTracking, getNextEpisode } from '@/services/firestore/tracking';
 
 interface Props {
   tracking: SeriesTracking;
 }
 
-const ONGOING_STATUSES = ['Returning Series', 'In Production', 'Pilot'];
-
 export function isOngoing(status: string): boolean {
-  return ONGOING_STATUSES.includes(status);
+  return status === 'Returning Series' || status === 'In Production' || status === 'To Be Determined';
 }
 
 export default function TrackedSeriesCard({ tracking }: Props) {
-  const posterUrl = getImageUrl(tracking.posterPath, 'w185');
+  const posterUrl = tracking.posterUrl;
   const watchedCount = Object.keys(tracking.watched).length;
   const total = tracking.totalEpisodes;
   const progress = total > 0 ? watchedCount / total : 0;
-  const ongoing = isOngoing(tracking.tmdbStatus);
+  const ongoing = isOngoing(tracking.status);
 
   return (
     <TouchableOpacity

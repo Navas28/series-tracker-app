@@ -7,11 +7,11 @@ import { Colors } from '@/constants/theme';
 import { useSeasonDetails } from '@/hooks/useSeries';
 import { countWatchedInSeason } from '@/services/firestore/tracking';
 import { formatEpisodeAirDate, isReleased } from '@/utils/date';
-import type { Season } from '@/services/tmdb/types';
+import type { ShowSeason } from '@/services/api/types';
 import type { SeriesTracking } from '@/services/firestore/tracking';
 
 interface Props {
-  season: Season;
+  season: ShowSeason;
   seriesId: number;
   tracking: SeriesTracking | null;
   onToggleEpisode: (seasonNum: number, episodeNum: number) => void;
@@ -31,6 +31,7 @@ export default function SeasonRow({
 
   const { data: details, isLoading: loadingEps } = useSeasonDetails(
     seriesId,
+    season.id,
     season.season_number,
     { enabled: expanded },
   );

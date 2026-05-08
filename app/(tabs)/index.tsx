@@ -13,8 +13,7 @@ import TrendingBanner from "@/components/series/TrendingBanner";
 import SeriesRow from "@/components/series/SeriesRow";
 
 export default function HomeScreen() {
-  const { data: trending, isLoading: loadingTrending } =
-    useTrendingSeries("week");
+  const { data: trending, isLoading: loadingTrending } = useTrendingSeries();
   const { data: popular, isLoading: loadingPopular } = usePopularSeries();
   const { data: topRated, isLoading: loadingTopRated } = useTopRatedSeries();
   const { data: airingToday, isLoading: loadingAiringToday } =

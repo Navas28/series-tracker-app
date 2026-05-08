@@ -9,7 +9,7 @@ import SeriesHero from '@/components/series/detail/SeriesHero';
 import TrackButton from '@/components/series/detail/TrackButton';
 import EpisodeTracker from '@/components/series/detail/EpisodeTracker';
 import SeriesCastRow from '@/components/series/detail/SeriesCastRow';
-import SeriesWatchProviders from '@/components/series/detail/SeriesWatchProviders';
+import SeriesReviews from '@/components/series/detail/SeriesReviews';
 import CompletionMilestone from '@/components/series/detail/CompletionMilestone';
 import SeriesRow from '@/components/series/SeriesRow';
 import { useState, useEffect } from 'react';
@@ -19,7 +19,7 @@ export default function SeriesDetailScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { data: series, isLoading, isError } = useSeriesDetails(Number(id));
+  const { data: series, isLoading, isError, error } = useSeriesDetails(Number(id));
   const { data: tracking } = useSeriesTracking(Number(id));
   const [showMilestone, setShowMilestone] = useState(false);
   const [wasCompleted, setWasCompleted] = useState<boolean | null>(null);
@@ -54,8 +54,13 @@ export default function SeriesDetailScreen() {
             Couldn't load this series
           </Text>
           <Text className="font-body text-sm text-text-sub text-center mt-2">
-            Check your connection and try again
+            {error instanceof Error ? error.message : 'Unknown error'}
           </Text>
+          {error instanceof Error && (error as { config?: { url?: string } }).config?.url ? (
+            <Text className="font-mono text-2xs text-text-muted text-center mt-1" numberOfLines={2}>
+              {(error as { config?: { url?: string } }).config?.url}
+            </Text>
+          ) : null}
         </View>
       )}
 
@@ -67,11 +72,11 @@ export default function SeriesDetailScreen() {
         >
           <SeriesHero series={series} />
           <TrackButton series={series} />
-          <SeriesWatchProviders series={series} />
           <EpisodeTracker series={series} />
-          <SeriesCastRow cast={series.aggregate_credits?.cast ?? []} />
-          {(series.recommendations?.results?.length ?? 0) > 0 && (
-            <SeriesRow title="More Like This" items={series.recommendations?.results} />
+          <SeriesCastRow cast={series.cast} />
+          <SeriesReviews traktId={series.traktId} />
+          {series.related.length > 0 && (
+            <SeriesRow title="More Like This" items={series.related} />
           )}
         </ScrollView>
       )}

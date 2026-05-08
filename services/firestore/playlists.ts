@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase';
 export interface PlaylistSeries {
   seriesId: number;
   name: string;
-  posterPath: string | null;
+  posterUrl: string | null;
 }
 
 export interface Playlist {

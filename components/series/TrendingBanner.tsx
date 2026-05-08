@@ -12,9 +12,8 @@ import {
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { getImageUrl } from '@/services/tmdb/client';
 import { SkeletonBanner } from '@/components/ui/Skeleton';
-import type { SeriesListItem } from '@/services/tmdb/types';
+import type { ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -22,12 +21,12 @@ const CARD_HEIGHT = Math.round(CARD_WIDTH * 0.56);
 const AUTO_SCROLL_INTERVAL = 4000;
 
 interface Props {
-  items?: SeriesListItem[];
+  items?: ShowListItem[];
   isLoading?: boolean;
 }
 
 export default function TrendingBanner({ items, isLoading }: Props) {
-  const flatListRef = useRef<FlatList<SeriesListItem>>(null);
+  const flatListRef = useRef<FlatList<ShowListItem>>(null);
   const currentIndexRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -77,12 +76,10 @@ export default function TrendingBanner({ items, isLoading }: Props) {
     item,
     index,
   }: {
-    item: SeriesListItem;
+    item: ShowListItem;
     index: number;
   }) => {
-    const imageUrl =
-      getImageUrl(item.backdrop_path, 'w780') ??
-      getImageUrl(item.poster_path, 'w500');
+    const imageUrl = item.backdrop_path ?? item.poster_path;
 
     // Per-card scale & opacity driven by scrollX for smooth effect during swipe
     const inputRange = [
@@ -119,8 +116,8 @@ export default function TrendingBanner({ items, isLoading }: Props) {
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={{ flex: 1 }}
-              contentFit="cover"
+              style={{ flex: 1, backgroundColor: '#0a1628' }}
+              contentFit="contain"
               transition={300}
             />
           ) : (

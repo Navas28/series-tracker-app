@@ -1,39 +1,31 @@
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Star, Tv2, PlayCircle, Calendar } from 'lucide-react-native';
+import { ArrowLeft, Star, Tv2, Calendar } from 'lucide-react-native';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import { getImageUrl } from '@/services/tmdb/client';
-import type { SeriesDetails } from '@/services/tmdb/types';
-import TrailerModal from './TrailerModal';
-import { useState } from 'react';
+import type { ShowDetails } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKDROP_HEIGHT = Math.round(SCREEN_WIDTH * 0.58);
 
 interface Props {
-  series: SeriesDetails;
+  series: ShowDetails;
 }
 
 export default function SeriesHero({ series }: Props) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const [showTrailer, setShowTrailer] = useState(false);
-  const backdropUrl = getImageUrl(series.backdrop_path, 'w780');
-  const posterUrl = getImageUrl(series.poster_path, 'w342');
 
-  const trailer = series.videos?.results?.find(
-    v => v.type === 'Trailer' && v.site === 'YouTube'
-  );
+  const isEnded = series.status === 'Ended' || series.status === 'Canceled';
 
   return (
     <View>
       <View style={{ height: BACKDROP_HEIGHT }}>
-        {backdropUrl ? (
-          <Image source={{ uri: backdropUrl }} style={{ flex: 1 }} contentFit="cover" />
+        {series.backdrop_path ? (
+          <Image source={{ uri: series.backdrop_path }} style={{ flex: 1 }} contentFit="cover" />
         ) : (
           <View className="flex-1 bg-surface-elevated" />
         )}
@@ -56,8 +48,8 @@ export default function SeriesHero({ series }: Props) {
             className="rounded-lg overflow-hidden bg-surface-elevated border border-border"
             style={{ width: 90, aspectRatio: 2 / 3, marginTop: -44 }}
           >
-            {posterUrl ? (
-              <Image source={{ uri: posterUrl }} style={{ flex: 1 }} contentFit="cover" />
+            {series.poster_path ? (
+              <Image source={{ uri: series.poster_path }} style={{ flex: 1 }} contentFit="cover" />
             ) : (
               <View className="flex-1 items-center justify-center">
                 <Tv2 size={24} color={colors.textMuted} strokeWidth={1.5} />
@@ -86,12 +78,8 @@ export default function SeriesHero({ series }: Props) {
                 ` · ${series.number_of_seasons} season${series.number_of_seasons > 1 ? 's' : ''}`}
             </Text>
             <View className="flex-row items-center mt-2 flex-wrap" style={{ gap: 8 }}>
-              <View
-                className={`rounded px-2 py-0.5 ${series.status === 'Ended' || series.status === 'Canceled' ? 'bg-surface-elevated' : 'bg-watched-subtle'}`}
-              >
-                <Text
-                  className={`font-body-medium text-[10px] ${series.status === 'Ended' || series.status === 'Canceled' ? 'text-text-muted' : 'text-watched'}`}
-                >
+              <View className={`rounded px-2 py-0.5 ${isEnded ? 'bg-surface-elevated' : 'bg-watched-subtle'}`}>
+                <Text className={`font-body-medium text-[10px] ${isEnded ? 'text-text-muted' : 'text-watched'}`}>
                   {series.status.toUpperCase()}
                 </Text>
               </View>
@@ -108,36 +96,16 @@ export default function SeriesHero({ series }: Props) {
           </View>
         </View>
 
-        <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
-          {trailer && (
+        {series.homepage && (
+          <View className="flex-row items-center mt-4">
             <TouchableOpacity
-              onPress={() => setShowTrailer(true)}
-              activeOpacity={0.8}
-              className="flex-row items-center bg-text rounded-full px-4 py-2"
-              style={{ gap: 6 }}
-            >
-              <PlayCircle size={16} color={colors.background} fill={colors.background} />
-              <Text className="font-body-bold text-sm text-background">Watch Trailer</Text>
-            </TouchableOpacity>
-          )}
-
-          {series.homepage && (
-            <TouchableOpacity
-              onPress={() => Linking.openURL(series.homepage)}
+              onPress={() => Linking.openURL(series.homepage!)}
               activeOpacity={0.7}
               className="border border-border rounded-full px-4 py-2"
             >
               <Text className="font-body-medium text-sm text-text">Website</Text>
             </TouchableOpacity>
-          )}
-        </View>
-
-        {trailer && (
-          <TrailerModal
-            visible={showTrailer}
-            onClose={() => setShowTrailer(false)}
-            videoKey={trailer.key}
-          />
+          </View>
         )}
 
         {series.genres.length > 0 && (
@@ -149,10 +117,6 @@ export default function SeriesHero({ series }: Props) {
             ))}
           </View>
         )}
-
-        {series.tagline ? (
-          <Text className="font-body text-sm text-text-muted italic mt-3">"{series.tagline}"</Text>
-        ) : null}
 
         {series.overview ? (
           <Text className="font-body text-sm text-text-sub leading-5 mt-3">{series.overview}</Text>

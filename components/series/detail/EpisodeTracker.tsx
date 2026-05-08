@@ -1,10 +1,10 @@
 import { View, Text } from 'react-native';
 import { useSeriesTracking, useToggleEpisode, useMarkSeason } from '@/hooks/useTracking';
 import SeasonRow from './SeasonRow';
-import type { SeriesDetails } from '@/services/tmdb/types';
+import type { ShowDetails } from '@/services/api/types';
 
 interface Props {
-  series: SeriesDetails;
+  series: ShowDetails;
 }
 
 export default function EpisodeTracker({ series }: Props) {
@@ -12,9 +12,9 @@ export default function EpisodeTracker({ series }: Props) {
   const trackingInput = {
     seriesId: series.id,
     name: series.name,
-    posterPath: series.poster_path,
-    backdropPath: series.backdrop_path,
-    tmdbStatus: series.status,
+    posterUrl: series.poster_path,
+    backdropUrl: series.backdrop_path,
+    status: series.status,
     totalSeasons: series.number_of_seasons,
     totalEpisodes: series.number_of_episodes,
   };

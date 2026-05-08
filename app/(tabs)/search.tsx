@@ -13,62 +13,26 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView, AnimatePresence } from 'moti';
-import { X, SlidersHorizontal, ChevronDown, Check } from 'lucide-react-native';
+import { X, SlidersHorizontal, Check } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import { useSearchSeries, useTVGenres, useDiscoverSeries } from '@/hooks/useSeries';
+import { useSearchSeries, useDiscoverSeries } from '@/hooks/useSeries';
 import SeriesCard from '@/components/series/SeriesCard';
 import { SkeletonGrid } from '@/components/ui/Skeleton';
-import type { SeriesListItem } from '@/services/tmdb/types';
+import { TRAKT_GENRES, type ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 40 - 12) / 2;
-
-/* ─── Complete streaming platforms (TMDB network IDs) ──────────── */
-const ALL_PLATFORMS = [
-  { id: 213,  name: 'Netflix' },
-  { id: 49,   name: 'HBO' },
-  { id: 2739, name: 'Disney+' },
-  { id: 1024, name: 'Amazon' },
-  { id: 2552, name: 'Apple TV+' },
-  { id: 2087, name: 'Hulu' },
-  { id: 453,  name: 'Peacock' },
-  { id: 4330, name: 'Paramount+' },
-  { id: 174,  name: 'AMC' },
-  { id: 19,   name: 'FOX' },
-  { id: 1,    name: 'Fuji TV' },
-  { id: 56,   name: 'Cartoon Network' },
-  { id: 316,  name: 'Crunchyroll' },
-  { id: 2046, name: 'Discovery+' },
-  { id: 359,  name: 'Showtime' },
-  { id: 6,    name: 'NBC' },
-  { id: 2,    name: 'ABC' },
-  { id: 67,   name: 'Syfy' },
-  { id: 77,   name: 'FX' },
-  { id: 16,   name: 'Comedy Central' },
-];
-
-/* ─── Quick-pick (most popular) shown as chips under search bar ─ */
-const QUICK_PLATFORMS = ALL_PLATFORMS.slice(0, 5);
 
 export default function SearchScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
 
-  const [query, setQuery]                     = useState('');
-  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
-  const [selectedNetworkId, setSelectedNetworkId] = useState<number | null>(null);
+  const [query, setQuery]               = useState('');
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
 
-  const { data: genres } = useTVGenres();
-
-  const {
-    data: searchData,
-    isLoading: searching,
-    fetchNextPage: fetchMoreSearch,
-    hasNextPage: hasMoreSearch,
-    isFetchingNextPage: fetchingMoreSearch,
-  } = useSearchSeries(query);
+  const { data: searchData, isLoading: searching } = useSearchSeries(query);
 
   const {
     data: discoverData,
@@ -76,33 +40,27 @@ export default function SearchScreen() {
     fetchNextPage: fetchMoreDiscover,
     hasNextPage: hasMoreDiscover,
     isFetchingNextPage: fetchingMoreDiscover,
-  } = useDiscoverSeries({
-    with_genres:   selectedGenreId  ? String(selectedGenreId)  : undefined,
-    with_networks: selectedNetworkId ?? undefined,
-    sort_by:       'popularity.desc',
-  });
+  } = useDiscoverSeries(selectedGenre);
 
   const isSearching  = query.trim().length > 0;
-  const isFiltering  = !isSearching && (selectedGenreId !== null || selectedNetworkId !== null);
-  const activeFilter = selectedGenreId !== null || selectedNetworkId !== null;
+  const isFiltering  = !isSearching && selectedGenre !== null;
+  const activeFilter = selectedGenre !== null;
 
-  let results: SeriesListItem[] = [];
+  let results: ShowListItem[] = [];
   if (isSearching) {
-    results = searchData?.pages.flatMap(p => p.results) ?? [];
+    results = searchData?.results ?? [];
   } else if (isFiltering) {
     results = discoverData?.pages.flatMap(p => p.results) ?? [];
   }
 
-  const isLoading = isSearching ? searching : isFiltering ? discovering : false;
-  const isFetchingMore = isSearching ? fetchingMoreSearch : fetchingMoreDiscover;
+  const isLoading     = isSearching ? searching : isFiltering ? discovering : false;
+  const isFetchingMore = isFiltering ? fetchingMoreDiscover : false;
 
   const loadMore = useCallback(() => {
-    if (isSearching && hasMoreSearch && !fetchingMoreSearch) {
-      fetchMoreSearch();
-    } else if (!isSearching && hasMoreDiscover && !fetchingMoreDiscover) {
+    if (!isSearching && hasMoreDiscover && !fetchingMoreDiscover) {
       fetchMoreDiscover();
     }
-  }, [isSearching, hasMoreSearch, hasMoreDiscover, fetchingMoreSearch, fetchingMoreDiscover, fetchMoreSearch, fetchMoreDiscover]);
+  }, [isSearching, hasMoreDiscover, fetchingMoreDiscover, fetchMoreDiscover]);
 
   const renderFooter = () => {
     if (!isFetchingMore) return null;
@@ -112,12 +70,6 @@ export default function SearchScreen() {
         <View style={{ width: CARD_WIDTH, height: CARD_WIDTH * 1.5, borderRadius: 8, backgroundColor: colors.surfaceElevated, opacity: 0.6 }} />
       </View>
     );
-  };
-
-  /* Filter modal state helpers */
-  const clearFilters = () => {
-    setSelectedGenreId(null);
-    setSelectedNetworkId(null);
   };
 
   return (
@@ -168,68 +120,17 @@ export default function SearchScreen() {
         </View>
       </MotiView>
 
-      {/* ── Quick platform chips (shown only when not searching) ── */}
-      {!isSearching && (
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 350, delay: 100 }}
-          className="pb-3"
-        >
-          <FlashList
-            data={QUICK_PLATFORMS}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={p => String(p.id)}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-            renderItem={({ item: platform }) => {
-              const active = selectedNetworkId === platform.id;
-              return (
-                <TouchableOpacity
-                  onPress={() => setSelectedNetworkId(active ? null : platform.id)}
-                  activeOpacity={0.75}
-                  className={`rounded-xl px-3 py-2 border ${
-                    active ? 'bg-accent border-accent' : 'bg-surface border-border'
-                  }`}
-                >
-                  <Text
-                    className={`font-body-medium text-xs ${
-                      active ? 'text-accent-fg' : 'text-text-sub'
-                    }`}
-                  >
-                    {platform.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </MotiView>
-      )}
-
-      {/* ── Active filter badge ───────────────────────────────── */}
+      {/* ── Active genre badge ───────────────────────────────── */}
       {activeFilter && !isSearching && (
-        <View className="flex-row items-center px-5 pb-2 gap-2 flex-wrap">
-          {selectedNetworkId !== null && (
-            <View className="flex-row items-center bg-accent-subtle rounded-full px-3 py-1 border border-accent gap-1">
-              <Text className="font-body-medium text-xs text-accent">
-                {ALL_PLATFORMS.find(p => p.id === selectedNetworkId)?.name}
-              </Text>
-              <TouchableOpacity onPress={() => setSelectedNetworkId(null)} hitSlop={6}>
-                <X size={12} color={colors.accent} />
-              </TouchableOpacity>
-            </View>
-          )}
-          {selectedGenreId !== null && (
-            <View className="flex-row items-center bg-accent-subtle rounded-full px-3 py-1 border border-accent gap-1">
-              <Text className="font-body-medium text-xs text-accent">
-                {genres?.find(g => g.id === selectedGenreId)?.name}
-              </Text>
-              <TouchableOpacity onPress={() => setSelectedGenreId(null)} hitSlop={6}>
-                <X size={12} color={colors.accent} />
-              </TouchableOpacity>
-            </View>
-          )}
+        <View className="flex-row items-center px-5 pb-2">
+          <View className="flex-row items-center bg-accent-subtle rounded-full px-3 py-1 border border-accent gap-1">
+            <Text className="font-body-medium text-xs text-accent">
+              {TRAKT_GENRES.find(g => g.id === selectedGenre)?.name}
+            </Text>
+            <TouchableOpacity onPress={() => setSelectedGenre(null)} hitSlop={6}>
+              <X size={12} color={colors.accent} />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -275,7 +176,7 @@ export default function SearchScreen() {
               className="items-center"
             >
               <Text className="font-body text-sm text-text-sub text-center">
-                Search for a series, pick a platform,{'\n'}or open filters to explore
+                Search for a series or open filters{'\n'}to explore by genre
               </Text>
               <TouchableOpacity
                 onPress={() => setFilterModalOpen(true)}
@@ -283,7 +184,7 @@ export default function SearchScreen() {
                 activeOpacity={0.8}
               >
                 <SlidersHorizontal size={16} color={colors.accentFg} strokeWidth={2} />
-                <Text className="font-body-semibold text-sm text-accent-fg">Open Filters</Text>
+                <Text className="font-body-semibold text-sm text-accent-fg">Browse by Genre</Text>
               </TouchableOpacity>
             </MotiView>
           )}
@@ -291,7 +192,7 @@ export default function SearchScreen() {
       )}
 
       {/* ─────────────────────────────────────────────────────── */}
-      {/*  Filter Modal                                          */}
+      {/*  Genre Filter Modal                                     */}
       {/* ─────────────────────────────────────────────────────── */}
       <Modal
         visible={filterModalOpen}
@@ -327,7 +228,7 @@ export default function SearchScreen() {
                   backgroundColor: colors.surface,
                   borderTopLeftRadius: 24,
                   borderTopRightRadius: 24,
-                  maxHeight: '82%',
+                  maxHeight: '75%',
                   paddingBottom: 32,
                 }}
               >
@@ -345,13 +246,13 @@ export default function SearchScreen() {
                   paddingVertical: 12,
                 }}>
                   <Text style={{ fontFamily: 'Sora-SemiBold', fontSize: 18, color: colors.text }}>
-                    Filters
+                    Browse by Genre
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
                     {activeFilter && (
-                      <TouchableOpacity onPress={clearFilters}>
+                      <TouchableOpacity onPress={() => setSelectedGenre(null)}>
                         <Text style={{ fontFamily: 'Inter-Medium', fontSize: 13, color: colors.accent }}>
-                          Clear all
+                          Clear
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -373,98 +274,39 @@ export default function SearchScreen() {
 
                 <ScrollView
                   showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingBottom: 16 }}
+                  contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
                 >
-                  {/* ── Platform section ── */}
-                  <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
-                    <Text style={{
-                      fontFamily: 'Inter-Regular',
-                      fontSize: 11,
-                      color: colors.textMuted,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                      marginBottom: 12,
-                    }}>
-                      Platform
-                    </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                      {ALL_PLATFORMS.map(platform => {
-                        const active = selectedNetworkId === platform.id;
-                        return (
-                          <TouchableOpacity
-                            key={platform.id}
-                            onPress={() => setSelectedNetworkId(active ? null : platform.id)}
-                            activeOpacity={0.75}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 6,
-                              paddingHorizontal: 14,
-                              paddingVertical: 9,
-                              borderRadius: 12,
-                              borderWidth: 1,
-                              backgroundColor: active ? colors.accent : colors.surfaceElevated,
-                              borderColor: active ? colors.accent : colors.border,
-                            }}
-                          >
-                            {active && <Check size={12} color={colors.accentFg} strokeWidth={2.5} />}
-                            <Text style={{
-                              fontFamily: 'Inter-Medium',
-                              fontSize: 13,
-                              color: active ? colors.accentFg : colors.text,
-                            }}>
-                              {platform.name}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-
-                  {/* ── Genre section ── */}
-                  <View style={{ paddingHorizontal: 20 }}>
-                    <Text style={{
-                      fontFamily: 'Inter-Regular',
-                      fontSize: 11,
-                      color: colors.textMuted,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                      marginBottom: 12,
-                    }}>
-                      Genre
-                    </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                      {(genres ?? []).map(genre => {
-                        const active = selectedGenreId === genre.id;
-                        return (
-                          <TouchableOpacity
-                            key={genre.id}
-                            onPress={() => setSelectedGenreId(active ? null : genre.id)}
-                            activeOpacity={0.75}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 6,
-                              paddingHorizontal: 14,
-                              paddingVertical: 9,
-                              borderRadius: 999,
-                              borderWidth: 1,
-                              backgroundColor: active ? colors.accent : colors.surfaceElevated,
-                              borderColor: active ? colors.accent : colors.border,
-                            }}
-                          >
-                            {active && <Check size={12} color={colors.accentFg} strokeWidth={2.5} />}
-                            <Text style={{
-                              fontFamily: 'Inter-Medium',
-                              fontSize: 13,
-                              color: active ? colors.accentFg : colors.text,
-                            }}>
-                              {genre.name}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {TRAKT_GENRES.map(genre => {
+                      const active = selectedGenre === genre.id;
+                      return (
+                        <TouchableOpacity
+                          key={genre.id}
+                          onPress={() => setSelectedGenre(active ? null : genre.id)}
+                          activeOpacity={0.75}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            paddingHorizontal: 14,
+                            paddingVertical: 9,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            backgroundColor: active ? colors.accent : colors.surfaceElevated,
+                            borderColor: active ? colors.accent : colors.border,
+                          }}
+                        >
+                          {active && <Check size={12} color={colors.accentFg} strokeWidth={2.5} />}
+                          <Text style={{
+                            fontFamily: 'Inter-Medium',
+                            fontSize: 13,
+                            color: active ? colors.accentFg : colors.text,
+                          }}>
+                            {genre.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </ScrollView>
 
@@ -497,4 +339,3 @@ export default function SearchScreen() {
     </SafeAreaView>
   );
 }
-

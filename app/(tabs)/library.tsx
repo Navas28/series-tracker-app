@@ -17,8 +17,8 @@ export default function MySeriesScreen() {
 
   const { data: allTracking, isLoading: loadingTracking } = useAllTracking();
 
-  const ongoingSeries = allTracking?.filter(t => isOngoing(t.tmdbStatus)) ?? [];
-  const endedSeries   = allTracking?.filter(t => !isOngoing(t.tmdbStatus)) ?? [];
+  const ongoingSeries = allTracking?.filter(t => isOngoing(t.status)) ?? [];
+  const endedSeries   = allTracking?.filter(t => !isOngoing(t.status)) ?? [];
   const hasAny        = (allTracking?.length ?? 0) > 0;
 
   return (

@@ -2,16 +2,15 @@ import { TouchableOpacity, View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { MotiView } from 'moti';
-import { getImageUrl } from '@/services/tmdb/client';
-import type { SeriesListItem } from '@/services/tmdb/types';
+import type { ShowListItem } from '@/services/api/types';
 
 interface Props {
-  item: SeriesListItem;
+  item: ShowListItem;
   width?: number;
 }
 
 export default function SeriesCard({ item, width = 120 }: Props) {
-  const imageUrl = getImageUrl(item.poster_path, 'w342');
+  const imageUrl = item.poster_path;
 
   return (
     <TouchableOpacity

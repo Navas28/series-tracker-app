@@ -12,9 +12,9 @@ import { db } from '@/lib/firebase';
 export interface SeriesTracking {
   seriesId: number;
   name: string;
-  posterPath: string | null;
-  backdropPath: string | null;
-  tmdbStatus: string;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  status: string;
   totalSeasons: number;
   totalEpisodes: number;
   addedAt: number;

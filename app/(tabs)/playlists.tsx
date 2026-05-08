@@ -10,7 +10,6 @@ import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { usePlaylists, useCreatePlaylist, useDeletePlaylist, useAddToPlaylist, useRemoveFromPlaylist } from '@/hooks/usePlaylists';
 import { useAllTracking } from '@/hooks/useTracking';
-import { getImageUrl } from '@/services/tmdb/client';
 import CreatePlaylistModal from '@/components/playlists/CreatePlaylistModal';
 import PlaylistCard from '@/components/playlists/PlaylistCard';
 import { Skeleton } from '@/components/ui/Skeleton';

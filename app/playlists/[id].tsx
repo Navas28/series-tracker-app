@@ -22,12 +22,10 @@ import {
   useAddToPlaylist,
 } from '@/hooks/usePlaylists';
 import { useAllTracking } from '@/hooks/useTracking';
-import { getImageUrl } from '@/services/tmdb/client';
 import SeriesCard from '@/components/series/SeriesCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Playlist, PlaylistSeries } from '@/services/firestore/playlists';
-import type { SeriesListItem } from '@/services/tmdb/types';
 
 export default function PlaylistDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -158,7 +156,7 @@ export default function PlaylistDetailScreen() {
                 contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
                 ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
                 renderItem={({ item: s, index }) => {
-                  const imageUrl = getImageUrl(s.posterPath, 'w185');
+                  const imageUrl = s.posterUrl;
                   return (
                     <MotiView
                       from={{ opacity: 0, scale: 0.9 }}
@@ -264,7 +262,7 @@ export default function PlaylistDetailScreen() {
                   <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingBottom: 16 }}>
                     {(allTracking ?? []).map((t, i) => {
                       const added = alreadyInPlaylist.has(t.seriesId);
-                      const posterUrl = getImageUrl(t.posterPath, 'w92');
+                      const posterUrl = t.posterUrl;
                       return (
                         <MotiView
                           key={t.seriesId}
@@ -273,7 +271,7 @@ export default function PlaylistDetailScreen() {
                           transition={{ type: 'timing', duration: 260, delay: i * 40 }}
                         >
                           <TouchableOpacity
-                            onPress={() => !added && handleAdd({ seriesId: t.seriesId, name: t.name, posterPath: t.posterPath })}
+                            onPress={() => !added && handleAdd({ seriesId: t.seriesId, name: t.name, posterUrl: t.posterUrl })}
                             activeOpacity={added ? 1 : 0.75}
                             style={{
                               flexDirection: 'row',

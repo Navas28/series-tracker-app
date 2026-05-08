@@ -3,12 +3,11 @@ import { Image } from 'expo-image';
 import { ChevronRight } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import { getImageUrl } from '@/services/tmdb/client';
-import type { Season } from '@/services/tmdb/types';
+import type { ShowSeason } from '@/services/api/types';
 
 interface Props {
   seriesId: number;
-  seasons: Season[];
+  seasons: ShowSeason[];
 }
 
 export default function SeriesSeasons({ seriesId, seasons }: Props) {
@@ -29,7 +28,7 @@ export default function SeriesSeasons({ seriesId, seasons }: Props) {
         contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
       >
         {visibleSeasons.map(season => {
-          const posterUrl = getImageUrl(season.poster_path, 'w185');
+          const posterUrl = season.poster_path;
           return (
             <View key={season.id} style={{ width: 110 }}>
               <View

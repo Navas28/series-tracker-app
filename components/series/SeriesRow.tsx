@@ -5,11 +5,11 @@ import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import SeriesCard from './SeriesCard';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import type { SeriesListItem } from '@/services/tmdb/types';
+import type { ShowListItem } from '@/services/api/types';
 
 interface Props {
   title: string;
-  items?: SeriesListItem[];
+  items?: ShowListItem[];
   isLoading?: boolean;
   onSeeAll?: () => void;
 }
