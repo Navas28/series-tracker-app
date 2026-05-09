@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -11,11 +12,11 @@ export function isOngoing(status: string): boolean {
   return status === 'Returning Series' || status === 'In Production' || status === 'To Be Determined';
 }
 
-export default function TrackedSeriesCard({ tracking }: Props) {
+function TrackedSeriesCard({ tracking }: Props) {
   const posterUrl = tracking.posterUrl;
-  const watchedCount = Object.keys(tracking.watched).length;
+  const watchedCount = useMemo(() => Object.keys(tracking.watched).length, [tracking.watched]);
   const total = tracking.totalEpisodes;
-  const progress = total > 0 ? watchedCount / total : 0;
+  const progress = useMemo(() => total > 0 ? watchedCount / total : 0, [watchedCount, total]);
   const ongoing = isOngoing(tracking.status);
 
   return (
@@ -77,3 +78,5 @@ export default function TrackedSeriesCard({ tracking }: Props) {
     </TouchableOpacity>
   );
 }
+
+export default memo(TrackedSeriesCard);

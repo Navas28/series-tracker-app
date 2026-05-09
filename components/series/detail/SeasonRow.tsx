@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ChevronDown, ChevronUp, CheckCircle2, Circle, CheckCheck, Lock } from 'lucide-react-native';
-import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeasonDetails } from '@/hooks/useSeries';
@@ -18,7 +17,7 @@ interface Props {
   onMarkSeason: (seasonNum: number, episodeCount: number, unwatch: boolean) => void;
 }
 
-export default function SeasonRow({
+function SeasonRow({
   season,
   seriesId,
   tracking,
@@ -36,10 +35,13 @@ export default function SeasonRow({
     { enabled: expanded },
   );
 
-  const watchedCount = tracking ? countWatchedInSeason(tracking.watched, season.season_number) : 0;
+  const watchedCount = useMemo(
+    () => (tracking ? countWatchedInSeason(tracking.watched, season.season_number) : 0),
+    [tracking, season.season_number],
+  );
   const total = season.episode_count;
   const allWatched = total > 0 && watchedCount >= total;
-  const progress = total > 0 ? watchedCount / total : 0;
+  const progress = useMemo(() => (total > 0 ? watchedCount / total : 0), [watchedCount, total]);
 
   // A season is considered released if its air_date is in the past
   const seasonReleased = isReleased(season.air_date);
@@ -122,11 +124,8 @@ export default function SeasonRow({
               : null;
 
             return (
-              <MotiView
+              <View
                 key={ep.id}
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ type: 'timing', duration: 150 }}
                 className="flex-row items-center px-4 py-3 border-b border-border-subtle"
                 style={{ opacity: episodeReleased ? 1 : 0.5 }}
               >
@@ -159,7 +158,7 @@ export default function SeasonRow({
                     <Circle size={20} color={colors.textMuted} strokeWidth={1.75} />
                   )}
                 </TouchableOpacity>
-              </MotiView>
+              </View>
             );
           })}
         </View>
@@ -167,3 +166,5 @@ export default function SeasonRow({
     </View>
   );
 }
+
+export default memo(SeasonRow);

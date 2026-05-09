@@ -9,10 +9,9 @@ import SeriesHero from '@/components/series/detail/SeriesHero';
 import TrackButton from '@/components/series/detail/TrackButton';
 import EpisodeTracker from '@/components/series/detail/EpisodeTracker';
 import SeriesCastRow from '@/components/series/detail/SeriesCastRow';
-import SeriesReviews from '@/components/series/detail/SeriesReviews';
 import CompletionMilestone from '@/components/series/detail/CompletionMilestone';
 import SeriesRow from '@/components/series/SeriesRow';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function SeriesDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,7 +21,7 @@ export default function SeriesDetailScreen() {
   const { data: series, isLoading, isError, error } = useSeriesDetails(Number(id));
   const { data: tracking } = useSeriesTracking(Number(id));
   const [showMilestone, setShowMilestone] = useState(false);
-  const [wasCompleted, setWasCompleted] = useState<boolean | null>(null);
+  const wasCompletedRef = useRef(false);
 
   useEffect(() => {
     if (tracking && series) {
@@ -30,12 +29,12 @@ export default function SeriesDetailScreen() {
       const total = series.number_of_episodes;
       const isCurrentlyCompleted = total > 0 && watchedCount >= total;
 
-      if (wasCompleted === false && isCurrentlyCompleted) {
+      if (!wasCompletedRef.current && isCurrentlyCompleted) {
         setShowMilestone(true);
       }
-      setWasCompleted(isCurrentlyCompleted);
+      wasCompletedRef.current = isCurrentlyCompleted;
     }
-  }, [tracking, series, wasCompleted]);
+  }, [tracking, series]);
 
   return (
     <>
@@ -74,7 +73,6 @@ export default function SeriesDetailScreen() {
           <TrackButton series={series} />
           <EpisodeTracker series={series} />
           <SeriesCastRow cast={series.cast} />
-          <SeriesReviews traktId={series.traktId} />
           {series.related.length > 0 && (
             <SeriesRow title="More Like This" items={series.related} />
           )}

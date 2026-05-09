@@ -1,7 +1,7 @@
+import { memo } from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { MotiView } from 'moti';
 import type { ShowListItem } from '@/services/api/types';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   width?: number;
 }
 
-export default function SeriesCard({ item, width = 120 }: Props) {
+function SeriesCard({ item, width = 120 }: Props) {
   const imageUrl = item.poster_path;
 
   return (
@@ -61,3 +61,5 @@ export default function SeriesCard({ item, width = 120 }: Props) {
     </TouchableOpacity>
   );
 }
+
+export default memo(SeriesCard);

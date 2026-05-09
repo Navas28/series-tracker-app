@@ -1,6 +1,6 @@
 import '../global.css';
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import {
@@ -23,13 +23,18 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { useColorScheme } from 'nativewind';
-
 import { useAuth } from '@/hooks/useAuth';
 import { ToastProvider } from '@/components/ui/Toast';
 import { View } from 'react-native';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 30,
+      retry: 1,
+    },
+  },
+});
 
 GoogleSignin.configure({
   webClientId: '574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com',
@@ -42,7 +47,6 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
   const { user, initializing } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -80,16 +84,16 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DarkTheme}>
         <ToastProvider>
-          <View className={colorScheme === 'dark' ? 'dark' : ''} style={{ flex: 1 }}>
+          <View className="dark" style={{ flex: 1 }}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="login" options={{ headerShown: false }} />
               <Stack.Screen name="series/view-all" options={{ headerShown: false }} />
             </Stack>
           </View>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          <StatusBar style="light" />
         </ToastProvider>
       </ThemeProvider>
     </QueryClientProvider>

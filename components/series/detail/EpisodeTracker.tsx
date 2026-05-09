@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { View, Text } from 'react-native';
 import { useSeriesTracking, useToggleEpisode, useMarkSeason } from '@/hooks/useTracking';
 import SeasonRow from './SeasonRow';
@@ -21,14 +22,26 @@ export default function EpisodeTracker({ series }: Props) {
   const { mutate: toggleEpisode } = useToggleEpisode(trackingInput);
   const { mutate: markSeason } = useMarkSeason(trackingInput);
 
-  const visibleSeasons = series.seasons.filter(s => s.season_number > 0);
-  if (visibleSeasons.length === 0) return null;
+  const visibleSeasons = useMemo(() => series.seasons.filter(s => s.season_number > 0), [series.seasons]);
 
-  // Build a map of seasonNum → episodeCount for all visible seasons
-  const seasonEpisodeCounts: Record<number, number> = {};
-  visibleSeasons.forEach(s => {
-    seasonEpisodeCounts[s.season_number] = s.episode_count;
-  });
+  const seasonEpisodeCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    visibleSeasons.forEach(s => { counts[s.season_number] = s.episode_count; });
+    return counts;
+  }, [visibleSeasons]);
+
+  const handleToggleEpisode = useCallback(
+    (sNum: number, epNum: number) => toggleEpisode({ seasonNum: sNum, episodeNum: epNum }),
+    [toggleEpisode],
+  );
+
+  const handleMarkSeason = useCallback(
+    (sNum: number, epCount: number, unwatch: boolean) =>
+      markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch, seasonEpisodeCounts }),
+    [markSeason, seasonEpisodeCounts],
+  );
+
+  if (visibleSeasons.length === 0) return null;
 
   return (
     <View className="mb-7">
@@ -41,12 +54,8 @@ export default function EpisodeTracker({ series }: Props) {
           season={season}
           seriesId={series.id}
           tracking={tracking ?? null}
-          onToggleEpisode={(sNum, epNum) =>
-            toggleEpisode({ seasonNum: sNum, episodeNum: epNum })
-          }
-          onMarkSeason={(sNum, epCount, unwatch) =>
-            markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch, seasonEpisodeCounts })
-          }
+          onToggleEpisode={handleToggleEpisode}
+          onMarkSeason={handleMarkSeason}
         />
       ))}
     </View>

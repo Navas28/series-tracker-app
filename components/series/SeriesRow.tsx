@@ -1,6 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import SeriesCard from './SeriesCard';
@@ -40,15 +39,8 @@ export default function SeriesRow({ title, items, isLoading, onSeeAll }: Props) 
       >
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : items?.map((item, index) => (
-              <MotiView
-                key={item.id}
-                from={{ opacity: 0, translateX: 12 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{ type: 'timing', duration: 320, delay: Math.min(index, 5) * 50 }}
-              >
-                <SeriesCard item={item} />
-              </MotiView>
+          : items?.map((item) => (
+              <SeriesCard key={item.id} item={item} />
             ))}
       </ScrollView>
     </View>

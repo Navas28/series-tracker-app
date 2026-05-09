@@ -1,11 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
   Dimensions,
   TouchableOpacity,
-  Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
@@ -17,8 +16,7 @@ import type { ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 40;
-const CARD_HEIGHT = Math.round(CARD_WIDTH * 0.56);
-const AUTO_SCROLL_INTERVAL = 4000;
+const CARD_HEIGHT = Math.round(CARD_WIDTH * 1.35);
 
 interface Props {
   items?: ShowListItem[];
@@ -27,40 +25,16 @@ interface Props {
 
 export default function TrendingBanner({ items, isLoading }: Props) {
   const flatListRef = useRef<FlatList<ShowListItem>>(null);
-  const currentIndexRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const topItems = items?.slice(0, 20) ?? [];
-
-  const startAutoScroll = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      if (topItems.length === 0) return;
-      const next = (currentIndexRef.current + 1) % topItems.length;
-      flatListRef.current?.scrollToIndex({ index: next, animated: true });
-      currentIndexRef.current = next;
-      setActiveIndex(next);
-    }, AUTO_SCROLL_INTERVAL);
-  }, [topItems.length]);
-
-  useEffect(() => {
-    if (topItems.length > 0) startAutoScroll();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [startAutoScroll]);
+  const topItems = items?.slice(0, 10) ?? [];
 
   const onMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-      currentIndexRef.current = index;
       setActiveIndex(index);
-      // Reset timer so it counts from now, not from when it last fired
-      startAutoScroll();
     },
-    [startAutoScroll],
+    [],
   );
 
   if (isLoading) {
@@ -72,31 +46,8 @@ export default function TrendingBanner({ items, isLoading }: Props) {
     );
   }
 
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: ShowListItem;
-    index: number;
-  }) => {
+  const renderItem = ({ item, index }: { item: ShowListItem; index: number }) => {
     const imageUrl = item.backdrop_path ?? item.poster_path;
-
-    // Per-card scale & opacity driven by scrollX for smooth effect during swipe
-    const inputRange = [
-      (index - 1) * SCREEN_WIDTH,
-      index * SCREEN_WIDTH,
-      (index + 1) * SCREEN_WIDTH,
-    ];
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.93, 1, 0.93],
-      extrapolate: 'clamp',
-    });
-    const opacity = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.7, 1, 0.7],
-      extrapolate: 'clamp',
-    });
 
     return (
       <TouchableOpacity
@@ -104,20 +55,12 @@ export default function TrendingBanner({ items, isLoading }: Props) {
         activeOpacity={0.9}
         style={{ width: SCREEN_WIDTH, paddingHorizontal: 20 }}
       >
-        <Animated.View
-          style={{
-            height: CARD_HEIGHT,
-            borderRadius: 12,
-            overflow: 'hidden',
-            transform: [{ scale }],
-            opacity,
-          }}
-        >
+        <View style={{ height: CARD_HEIGHT, borderRadius: 12, overflow: 'hidden' }}>
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
               style={{ flex: 1, backgroundColor: '#0a1628' }}
-              contentFit="contain"
+              contentFit="cover"
               transition={300}
             />
           ) : (
@@ -125,13 +68,13 @@ export default function TrendingBanner({ items, isLoading }: Props) {
           )}
 
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.90)']}
+            colors={['transparent', 'rgba(0,0,0,0.92)']}
             style={{
               position: 'absolute',
               bottom: 0,
               left: 0,
               right: 0,
-              height: CARD_HEIGHT * 0.68,
+              height: CARD_HEIGHT * 0.5,
             }}
           />
 
@@ -151,14 +94,11 @@ export default function TrendingBanner({ items, isLoading }: Props) {
             <Text className="font-heading text-lg text-white" numberOfLines={1}>
               {item.name}
             </Text>
-            <Text
-              className="font-body text-xs text-white/70 mt-0.5"
-              numberOfLines={2}
-            >
+            <Text className="font-body text-xs text-white/70 mt-0.5" numberOfLines={2}>
               {item.overview}
             </Text>
           </View>
-        </Animated.View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -166,15 +106,13 @@ export default function TrendingBanner({ items, isLoading }: Props) {
   return (
     <View className="mb-7">
       <View className="flex-row items-center justify-between px-5 mb-3">
-        <Text className="font-heading text-base text-text">
-          Trending This Week
-        </Text>
+        <Text className="font-heading text-base text-text">Trending This Week</Text>
         <Text className="font-mono text-xs text-text-muted">
           {activeIndex + 1} / {topItems.length}
         </Text>
       </View>
 
-      <Animated.FlatList
+      <FlatList
         ref={flatListRef}
         data={topItems}
         renderItem={renderItem}
@@ -183,10 +121,6 @@ export default function TrendingBanner({ items, isLoading }: Props) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumScrollEnd}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true },
-        )}
         scrollEventThrottle={16}
         getItemLayout={(_, index) => ({
           length: SCREEN_WIDTH,

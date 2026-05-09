@@ -16,8 +16,8 @@ interface Props {
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 /* Particle burst positions — pre-computed so each render is stable */
-const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
-  angle: (i / 18) * 2 * Math.PI,
+const PARTICLES = Array.from({ length: 10 }, (_, i) => ({
+  angle: (i / 10) * 2 * Math.PI,
   distance: 120 + (i % 3) * 60,
   color: i % 3 === 0 ? 'accent' : i % 3 === 1 ? 'watched' : 'rating',
   size: 6 + (i % 3) * 3,

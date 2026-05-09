@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MotiView } from 'moti';
-import { Sun, Moon, BarChart2, Bell, ChevronRight, LogOut } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
+import { BarChart2, Bell, ChevronRight, LogOut, Download } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors } from '@/constants/theme';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { exportTrackingData } from '@/services/export';
+
+const colors = Colors.dark;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const isDark = colorScheme === 'dark';
 
   const [signOutModal, setSignOutModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!user) return;
+    setIsExporting(true);
+    try {
+      await exportTrackingData(user.uid);
+    } catch {
+      Alert.alert('Export Failed', 'Could not export your data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -29,13 +40,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false}>
+
         {/* Avatar + name */}
-        <MotiView
-          from={{ opacity: 0, translateY: -16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500 }}
-          className="items-center pt-10 pb-8"
-        >
+        <View className="items-center pt-10 pb-8">
           <View className="relative mb-5">
             {user.photoURL ? (
               <Image
@@ -54,45 +61,12 @@ export default function ProfileScreen() {
 
           <Text className="font-heading text-xl text-text">{user.displayName ?? 'Series Fan'}</Text>
           <Text className="font-body text-sm text-text-sub mt-1">{user.email}</Text>
-        </MotiView>
+        </View>
 
         <View className="px-5" style={{ gap: 12 }}>
-          {/* Appearance */}
-          <MotiView
-            from={{ opacity: 0, translateX: -12 }}
-            animate={{ opacity: 1, translateX: 0 }}
-            transition={{ type: 'timing', duration: 400, delay: 100 }}
-          >
-            <Text className="font-body text-xs text-text-muted uppercase mb-2 ml-1" style={{ letterSpacing: 1 }}>
-              Appearance
-            </Text>
-            <View className="bg-surface rounded-xl border border-border overflow-hidden">
-              <TouchableOpacity
-                className="flex-row items-center px-4 py-4"
-                onPress={toggleColorScheme}
-                activeOpacity={0.7}
-              >
-                <View className="w-9 h-9 rounded-lg bg-accent-subtle items-center justify-center mr-4">
-                  {isDark ? (
-                    <Moon size={18} color={colors.accent} strokeWidth={1.5} />
-                  ) : (
-                    <Sun size={18} color={colors.accent} strokeWidth={1.5} />
-                  )}
-                </View>
-                <Text className="flex-1 font-body-medium text-base text-text">
-                  {isDark ? 'Dark Mode' : 'Light Mode'}
-                </Text>
-                <Text className="font-body text-sm text-text-muted">Tap to switch</Text>
-              </TouchableOpacity>
-            </View>
-          </MotiView>
 
           {/* Account */}
-          <MotiView
-            from={{ opacity: 0, translateX: -12 }}
-            animate={{ opacity: 1, translateX: 0 }}
-            transition={{ type: 'timing', duration: 400, delay: 150 }}
-          >
+          <View>
             <Text className="font-body text-xs text-text-muted uppercase mb-2 ml-1" style={{ letterSpacing: 1 }}>
               Account
             </Text>
@@ -114,16 +88,29 @@ export default function ProfileScreen() {
                 <Text className="flex-1 font-body-medium text-base text-text">Release Notifications</Text>
                 <ChevronRight size={16} color={colors.textMuted} />
               </TouchableOpacity>
+
+              <View className="h-px bg-border-subtle ml-16" />
+
+              <TouchableOpacity
+                className="flex-row items-center px-4 py-4"
+                onPress={handleExport}
+                activeOpacity={0.7}
+                disabled={isExporting}
+              >
+                <View className="w-9 h-9 rounded-lg bg-watched-subtle items-center justify-center mr-4">
+                  <Download size={18} color={colors.watched} strokeWidth={1.5} />
+                </View>
+                <Text className="flex-1 font-body-medium text-base text-text">Export My Data</Text>
+                {isExporting
+                  ? <ActivityIndicator size="small" color={colors.textMuted} />
+                  : <ChevronRight size={16} color={colors.textMuted} />
+                }
+              </TouchableOpacity>
             </View>
-          </MotiView>
+          </View>
 
           {/* Sign Out */}
-          <MotiView
-            from={{ opacity: 0, translateY: 12 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400, delay: 200 }}
-            className="mt-2"
-          >
+          <View className="mt-2">
             <TouchableOpacity
               className="flex-row items-center justify-center rounded-xl border border-error py-4"
               onPress={() => setSignOutModal(true)}
@@ -132,9 +119,9 @@ export default function ProfileScreen() {
               <LogOut size={18} color={colors.error} strokeWidth={1.5} />
               <Text className="font-body-semibold text-base text-error ml-2">Sign Out</Text>
             </TouchableOpacity>
-          </MotiView>
+          </View>
 
-        <Text className="font-mono text-xs text-text-muted text-center py-6">BINGE | Version 1.0.0 (Beta)</Text>
+          <Text className="font-mono text-xs text-text-muted text-center py-6">BINGE | Version 1.0.0 (Beta)</Text>
         </View>
       </ScrollView>
 

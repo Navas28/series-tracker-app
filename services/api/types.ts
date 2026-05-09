@@ -1,28 +1,25 @@
-// Normalized internal types — field names kept close to TMDB originals
-// to minimize component changes. poster_path / backdrop_path are now full URLs.
-
 export interface ShowGenre {
-  id: string;  // TVMaze: genre name used as id. Trakt: genre slug.
+  id: string;
   name: string;
 }
 
 export interface ShowListItem {
-  id: number;                   // TVMaze ID (primary key)
+  id: number;
   traktId: number | null;
   imdbId: string | null;
   name: string;
   overview: string;
-  poster_path: string | null;   // Full URL (no getImageUrl() call needed)
-  backdrop_path: string | null; // Full URL (no getImageUrl() call needed)
+  poster_path: string | null;
+  backdrop_path: string | null;
   first_air_date: string | null;
   genres: ShowGenre[];
-  vote_average: number;         // 0–10 scale from Trakt rating
+  vote_average: number;
 }
 
 export interface ShowCastMember {
   id: number;
   name: string;
-  profile_path: string | null;  // Full URL
+  profile_path: string | null;
   character: string;
   total_episode_count: number;
   roles: { character: string; episode_count: number }[];
@@ -34,7 +31,7 @@ export interface ShowSeason {
   season_number: number;
   episode_count: number;
   air_date: string | null;
-  poster_path: string | null;   // Full URL
+  poster_path: string | null;
   vote_average: number;
 }
 
@@ -44,7 +41,7 @@ export interface ShowEpisode {
   episode_number: number;
   season_number: number;
   air_date: string | null;
-  still_path: string | null;   // Full URL
+  still_path: string | null;
   vote_average: number;
   vote_count: number;
   runtime: number | null;
@@ -59,7 +56,7 @@ export interface ShowNetwork {
 
 export interface ShowDetails extends ShowListItem {
   tagline: string;
-  status: string;               // "Returning Series" | "Ended" | "In Production" | "To Be Determined"
+  status: string;
   number_of_seasons: number;
   number_of_episodes: number;
   networks: ShowNetwork[];
@@ -81,23 +78,7 @@ export interface ShowSeasonDetails {
   episodes: ShowEpisode[];
 }
 
-export interface TraktComment {
-  id: number;
-  username: string;
-  comment: string;
-  likes: number;
-  createdAt: string;
-  spoiler: boolean;
-  userRating: number | null;
-}
-
-export interface TraktRating {
-  rating: number;
-  votes: number;
-}
-
-// Hardcoded Trakt genre list — stable, no fetch needed
-export const TRAKT_GENRES: ShowGenre[] = [
+export const SHOW_GENRES: ShowGenre[] = [
   { id: 'action', name: 'Action' },
   { id: 'adventure', name: 'Adventure' },
   { id: 'animation', name: 'Animation' },

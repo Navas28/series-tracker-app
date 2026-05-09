@@ -25,7 +25,7 @@ export function formatEpisodeAirDate(dateStr: string | null): string | null {
  * Returns false if the date is in the future or if dateStr is null/empty (unknown).
  */
 export function isReleased(dateStr: string | null | undefined): boolean {
-  if (!dateStr) return false;
+  if (!dateStr) return true;
   const airDate = new Date(dateStr);
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -7,12 +7,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import {
-  usePopularSeries,
-  useTopRatedSeries,
-  useAiringTodaySeries,
-  useOnTheAirSeries,
-} from '@/hooks/useSeries';
+import { usePopularSeries, useTopRatedSeries } from '@/hooks/useSeries';
 import SeriesCard from '@/components/series/SeriesCard';
 import { SkeletonGrid } from '@/components/ui/Skeleton';
 import type { ShowListItem } from '@/services/api/types';
@@ -23,13 +18,11 @@ const GAP = 10;
 const H_PAD = 20;
 const CARD_WIDTH = (SCREEN_WIDTH - H_PAD * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
-type Category = 'popular' | 'top_rated' | 'airing_today' | 'on_the_air';
+type Category = 'popular' | 'top_rated';
 
 const TITLES: Record<Category, string> = {
-  popular:      'Popular Right Now',
-  top_rated:    'Top Rated',
-  airing_today: 'Airing Today',
-  on_the_air:   'On The Air This Week',
+  popular:   'Popular Right Now',
+  top_rated: 'Top Rated',
 };
 
 export default function ViewAllScreen() {
@@ -37,10 +30,8 @@ export default function ViewAllScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
 
-  const popular    = usePopularSeries();
-  const topRated   = useTopRatedSeries();
-  const airing     = useAiringTodaySeries();
-  const onTheAir   = useOnTheAirSeries();
+  const popular  = usePopularSeries();
+  const topRated = useTopRatedSeries();
 
   let items: ShowListItem[] = [];
   let isLoading = false;
@@ -49,23 +40,17 @@ export default function ViewAllScreen() {
   let isFetchingNextPage = false;
 
   if (category === 'popular') {
-    items           = popular.data?.pages.flatMap(p => p.results) ?? [];
-    isLoading       = popular.isLoading;
-    fetchNextPage   = popular.fetchNextPage;
-    hasNextPage     = !!popular.hasNextPage;
+    items              = popular.data?.pages.flatMap(p => p.results) ?? [];
+    isLoading          = popular.isLoading;
+    fetchNextPage      = popular.fetchNextPage;
+    hasNextPage        = !!popular.hasNextPage;
     isFetchingNextPage = popular.isFetchingNextPage;
   } else if (category === 'top_rated') {
-    items           = topRated.data?.pages.flatMap(p => p.results) ?? [];
-    isLoading       = topRated.isLoading;
-    fetchNextPage   = topRated.fetchNextPage;
-    hasNextPage     = !!topRated.hasNextPage;
+    items              = topRated.data?.pages.flatMap(p => p.results) ?? [];
+    isLoading          = topRated.isLoading;
+    fetchNextPage      = topRated.fetchNextPage;
+    hasNextPage        = !!topRated.hasNextPage;
     isFetchingNextPage = topRated.isFetchingNextPage;
-  } else if (category === 'airing_today') {
-    items           = airing.data?.results ?? [];
-    isLoading       = airing.isLoading;
-  } else if (category === 'on_the_air') {
-    items           = onTheAir.data?.results ?? [];
-    isLoading       = onTheAir.isLoading;
   }
 
   const loadMore = useCallback(() => {

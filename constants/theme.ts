@@ -186,7 +186,7 @@ export const Shadow = {
    MAIN EXPORT
    ──────────────────────────────────────────────── */
 
-export const Colors = { light, dark };
+export const Colors = { light: dark, dark };
 
 export const theme = {
   colors: { light, dark },

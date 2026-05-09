@@ -14,20 +14,17 @@ import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView, AnimatePresence } from 'moti';
 import { X, SlidersHorizontal, Check } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSearchSeries, useDiscoverSeries } from '@/hooks/useSeries';
 import SeriesCard from '@/components/series/SeriesCard';
 import { SkeletonGrid } from '@/components/ui/Skeleton';
-import { TRAKT_GENRES, type ShowListItem } from '@/services/api/types';
+import { SHOW_GENRES, type ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 40 - 12) / 2;
+const colors = Colors.dark;
 
 export default function SearchScreen() {
-  const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme ?? 'dark'];
-
   const [query, setQuery]               = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -75,16 +72,9 @@ export default function SearchScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
 
-      {/* ── Header ───────────────────────────────────────────── */}
-      <MotiView
-        from={{ opacity: 0, translateY: -12 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 420 }}
-        className="px-5 pt-3 pb-3"
-      >
+      <View className="px-5 pt-3 pb-3">
         <Text className="font-display text-2xl text-text mb-4">Discover</Text>
 
-        {/* Search bar + filter button */}
         <View className="flex-row items-center gap-2">
           <View
             className="flex-1 flex-row items-center bg-surface border border-border rounded-xl px-3"
@@ -106,7 +96,6 @@ export default function SearchScreen() {
             )}
           </View>
 
-          {/* Filter button */}
           <TouchableOpacity
             onPress={() => setFilterModalOpen(true)}
             activeOpacity={0.8}
@@ -118,14 +107,13 @@ export default function SearchScreen() {
             <SlidersHorizontal size={18} color={activeFilter ? colors.accentFg : colors.textSub} strokeWidth={2} />
           </TouchableOpacity>
         </View>
-      </MotiView>
+      </View>
 
-      {/* ── Active genre badge ───────────────────────────────── */}
       {activeFilter && !isSearching && (
         <View className="flex-row items-center px-5 pb-2">
           <View className="flex-row items-center bg-accent-subtle rounded-full px-3 py-1 border border-accent gap-1">
             <Text className="font-body-medium text-xs text-accent">
-              {TRAKT_GENRES.find(g => g.id === selectedGenre)?.name}
+              {SHOW_GENRES.find(g => g.id === selectedGenre)?.name}
             </Text>
             <TouchableOpacity onPress={() => setSelectedGenre(null)} hitSlop={6}>
               <X size={12} color={colors.accent} />
@@ -134,7 +122,6 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {/* ── Results ──────────────────────────────────────────── */}
       {isLoading ? (
         <SkeletonGrid count={6} cardWidth={CARD_WIDTH} />
       ) : results.length > 0 ? (
@@ -149,14 +136,9 @@ export default function SearchScreen() {
           onEndReachedThreshold={0.4}
           ListFooterComponent={renderFooter}
           renderItem={({ item, index }) => (
-            <MotiView
-              from={{ opacity: 0, translateY: 16 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 320, delay: Math.min(index % 6, 3) * 60 }}
-              style={{ flex: 1, paddingLeft: index % 2 === 1 ? 12 : 0 }}
-            >
+            <View style={{ flex: 1, paddingLeft: index % 2 === 1 ? 12 : 0 }}>
               <SeriesCard item={item} width={CARD_WIDTH} />
-            </MotiView>
+            </View>
           )}
         />
       ) : (
@@ -169,12 +151,7 @@ export default function SearchScreen() {
               </Text>
             </>
           ) : (
-            <MotiView
-              from={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'spring', damping: 18 }}
-              className="items-center"
-            >
+            <View className="items-center">
               <Text className="font-body text-sm text-text-sub text-center">
                 Search for a series or open filters{'\n'}to explore by genre
               </Text>
@@ -186,14 +163,12 @@ export default function SearchScreen() {
                 <SlidersHorizontal size={16} color={colors.accentFg} strokeWidth={2} />
                 <Text className="font-body-semibold text-sm text-accent-fg">Browse by Genre</Text>
               </TouchableOpacity>
-            </MotiView>
+            </View>
           )}
         </View>
       )}
 
-      {/* ─────────────────────────────────────────────────────── */}
-      {/*  Genre Filter Modal                                     */}
-      {/* ─────────────────────────────────────────────────────── */}
+      {/* Genre Filter Modal — keep sheet animations */}
       <Modal
         visible={filterModalOpen}
         transparent
@@ -203,7 +178,6 @@ export default function SearchScreen() {
         <AnimatePresence>
           {filterModalOpen && (
             <>
-              {/* Backdrop */}
               <MotiView
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -214,7 +188,6 @@ export default function SearchScreen() {
                 <Pressable style={{ flex: 1 }} onPress={() => setFilterModalOpen(false)} />
               </MotiView>
 
-              {/* Sheet */}
               <MotiView
                 from={{ translateY: 600 }}
                 animate={{ translateY: 0 }}
@@ -232,12 +205,10 @@ export default function SearchScreen() {
                   paddingBottom: 32,
                 }}
               >
-                {/* Sheet handle */}
                 <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
                   <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
                 </View>
 
-                {/* Modal header */}
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -277,7 +248,7 @@ export default function SearchScreen() {
                   contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
                 >
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {TRAKT_GENRES.map(genre => {
+                    {SHOW_GENRES.map(genre => {
                       const active = selectedGenre === genre.id;
                       return (
                         <TouchableOpacity
@@ -310,7 +281,6 @@ export default function SearchScreen() {
                   </View>
                 </ScrollView>
 
-                {/* Apply button */}
                 <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
                   <TouchableOpacity
                     onPress={() => setFilterModalOpen(false)}
