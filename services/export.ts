@@ -1,23 +1,5 @@
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { Share } from 'react-native';
 import { getAllTracking, SeriesTracking } from './firestore/tracking';
-
-interface ExportSeries {
-  seriesId: number;
-  name: string;
-  status: string;
-  totalSeasons: number;
-  totalEpisodes: number;
-  watchedEpisodes: number;
-  seasons: Record<string, number>;
-  lastWatchedAt: number;
-}
-
-interface ExportData {
-  exportedAt: string;
-  totalSeries: number;
-  series: ExportSeries[];
-}
 
 function buildSeasonSummary(watched: Record<string, true>): Record<string, number> {
   const summary: Record<string, number> = {};
@@ -31,45 +13,46 @@ function buildSeasonSummary(watched: Record<string, true>): Record<string, numbe
   return summary;
 }
 
-function toExportSeries(t: SeriesTracking): ExportSeries {
-  return {
-    seriesId: t.seriesId,
-    name: t.name,
-    status: t.status,
-    totalSeasons: t.totalSeasons,
-    totalEpisodes: t.totalEpisodes,
-    watchedEpisodes: Object.keys(t.watched).length,
-    seasons: buildSeasonSummary(t.watched),
-    lastWatchedAt: t.lastWatchedAt,
-  };
+function formatTxt(series: SeriesTracking[]): string {
+  const divider = '─'.repeat(36);
+  const date = new Date().toISOString().split('T')[0];
+
+  const lines: string[] = [
+    'BINGE — My Series Export',
+    `Exported : ${date}`,
+    `Total    : ${series.length} series tracked`,
+    '',
+  ];
+
+  for (const t of series) {
+    const watchedCount = Object.keys(t.watched).length;
+    const seasonMap = buildSeasonSummary(t.watched);
+    const maxSeason = t.totalSeasons;
+
+    lines.push(divider);
+    lines.push(t.name);
+    lines.push(`Status  : ${t.status}`);
+    lines.push(`Watched : ${watchedCount} / ${t.totalEpisodes} episodes`);
+
+    for (let s = 1; s <= maxSeason; s++) {
+      const watched = seasonMap[String(s)] ?? 0;
+      lines.push(`  Season ${s}: ${watched} episodes watched`);
+    }
+  }
+
+  lines.push(divider);
+  return lines.join('\n');
 }
 
 export async function exportTrackingData(userId: string): Promise<void> {
   const trackingList = await getAllTracking(userId);
+  const sorted = trackingList.sort((a, b) => a.name.localeCompare(b.name));
 
-  const exportData: ExportData = {
-    exportedAt: new Date().toISOString(),
-    totalSeries: trackingList.length,
-    series: trackingList
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map(toExportSeries),
-  };
-
-  const json = JSON.stringify(exportData, null, 2);
+  const txt = formatTxt(sorted);
   const date = new Date().toISOString().split('T')[0];
-  const filename = `binge-export-${date}.json`;
-  const path = `${FileSystem.cacheDirectory}${filename}`;
 
-  await FileSystem.writeAsStringAsync(path, json, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
-
-  const canShare = await Sharing.isAvailableAsync();
-  if (!canShare) throw new Error('Sharing is not available on this device');
-
-  await Sharing.shareAsync(path, {
-    mimeType: 'application/json',
-    dialogTitle: 'Export Binge Data',
-    UTI: 'public.json',
+  await Share.share({
+    title: `binge-export-${date}.txt`,
+    message: txt,
   });
 }

@@ -20,7 +20,8 @@ export default function ProfileScreen() {
     setIsExporting(true);
     try {
       await exportTrackingData(user.uid);
-    } catch {
+    } catch (error) {
+      console.error('[Export] failed:', error);
       Alert.alert('Export Failed', 'Could not export your data. Please try again.');
     } finally {
       setIsExporting(false);
