@@ -85,17 +85,7 @@ export default function ProfileScreen() {
                 <ChevronRight size={16} color={colors.textMuted} />
               </TouchableOpacity>
 
-              <View className="h-px bg-border-subtle ml-16" />
-
-              <TouchableOpacity className="flex-row items-center px-4 py-4" activeOpacity={0.7}>
-                <View className="w-9 h-9 rounded-lg bg-accent-subtle items-center justify-center mr-4">
-                  <Bell size={18} color={colors.accent} strokeWidth={1.5} />
-                </View>
-                <Text className="flex-1 font-body-medium text-base text-text">Release Notifications</Text>
-                <ChevronRight size={16} color={colors.textMuted} />
-              </TouchableOpacity>
-
-              <View className="h-px bg-border-subtle ml-16" />
+              <View className="h-px bg-border-subtle" />
 
               <TouchableOpacity
                 className="flex-row items-center px-4 py-4"
@@ -127,7 +117,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text className="font-mono text-xs text-text-muted text-center py-6">BINGE | Version 1.0.0 (Beta)</Text>
+          <Text className="font-mono text-xs text-text-muted text-center py-6">BINGE | Version 1.0.0</Text>
         </View>
       </ScrollView>
 

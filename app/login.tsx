@@ -110,26 +110,6 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
-
-            <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-[1px] bg-border-subtle" />
-              <Text className="font-mono text-[10px] text-text-muted uppercase mx-4">
-                Premium Access
-              </Text>
-              <View className="flex-1 h-[1px] bg-border-subtle" />
-            </View>
-
-            <View className="items-center">
-              <Text className="font-body text-sm text-text-muted">
-                New here?{" "}
-                <Text className="text-accent font-body-semibold">
-                  Request access
-                </Text>
-              </Text>
-              <Text className="font-body text-sm text-text-muted mt-1">
-                to join the elite tracker community.
-              </Text>
-            </View>
           </MotiView>
 
           <MotiView
@@ -149,10 +129,6 @@ export default function LoginScreen() {
                 Database
               </Text>
             </View>
-            <Text className="font-body text-[11px] text-text-muted text-center max-w-[280px] leading-relaxed">
-              By continuing, you agree to the CINEVERSE terms of service and
-              acknowledge you have read our global data policy.
-            </Text>
           </MotiView>
         </View>
       </View>

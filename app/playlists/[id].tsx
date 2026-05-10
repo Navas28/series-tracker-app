@@ -8,10 +8,11 @@ import {
   Pressable,
   StyleSheet,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, Trash2, Plus, X, Check, ArrowRightLeft } from 'lucide-react-native';
+import { ArrowLeft, Trash2, Plus, X, Check, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/theme';
@@ -42,14 +43,12 @@ export default function PlaylistDetailScreen() {
   const { mutate: addToPlaylist }      = useAddToPlaylist();
 
   const [addModalOpen, setAddModalOpen]       = useState(false);
-  const [moveModalOpen, setMoveModalOpen]     = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
-  const [selectedSeries, setSelectedSeries]   = useState<PlaylistSeries | null>(null);
   const [removeTarget, setRemoveTarget]       = useState<{ id: number; name: string } | null>(null);
+  const [searchQuery, setSearchQuery]         = useState('');
 
   const playlist = playlists?.find(p => p.id === id);
-  const otherPlaylists = playlists?.filter(p => p.id !== id) ?? [];
 
   const handleDelete = () => setDeleteModalOpen(true);
   const confirmDelete = () => deletePlaylist(id, { onSuccess: () => router.back() });
@@ -62,25 +61,15 @@ export default function PlaylistDetailScreen() {
     if (removeTarget) removeFromPlaylist({ playlistId: id, seriesId: removeTarget.id });
   };
 
-  const handleMove = (target: Playlist) => {
-    if (!selectedSeries) return;
-    addToPlaylist(
-      { playlistId: target.id, series: selectedSeries },
-      {
-        onSuccess: () => {
-          removeFromPlaylist({ playlistId: id, seriesId: selectedSeries.seriesId });
-          setMoveModalOpen(false);
-          setSelectedSeries(null);
-        },
-      },
-    );
-  };
-
   const handleAdd = (series: PlaylistSeries) => {
     addToPlaylist({ playlistId: id, series });
   };
 
   const alreadyInPlaylist = new Set(playlist?.series.map(s => s.seriesId) ?? []);
+
+  const filteredSeries = (allTracking ?? []).filter(t => 
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()) && !alreadyInPlaylist.has(t.seriesId)
+  );
 
   return (
     <>
@@ -102,7 +91,7 @@ export default function PlaylistDetailScreen() {
             style={{ gap: 5 }}
           >
             <Plus size={14} color={colors.accentFg} strokeWidth={2.5} />
-            <Text className="font-body-medium text-xs text-accent-fg">Add</Text>
+            <Text className="font-body-medium text-sm text-accent-fg">Add</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDelete} hitSlop={8}>
             <Trash2 size={20} color={colors.error} strokeWidth={1.75} />
@@ -151,33 +140,30 @@ export default function PlaylistDetailScreen() {
                     >
                       <View
                         className="rounded-xl overflow-hidden bg-surface-elevated"
-                        style={{ width: '100%', aspectRatio: 2 / 3 }}
+                        style={{ width: '100%', aspectRatio: 2 / 3, position: 'relative' }}
                       >
                         {s.posterUrl && (
-                          <Image source={{ uri: s.posterUrl }} style={{ flex: 1 }} contentFit="cover" />
+                          <Image source={{ uri: s.posterUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
                         )}
+                        <TouchableOpacity
+                          onPress={() => handleRemove(s.seriesId, s.name)}
+                          style={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            backgroundColor: 'rgba(0,0,0,0.6)',
+                            padding: 6,
+                            borderRadius: 12,
+                          }}
+                          hitSlop={8}
+                        >
+                          <X size={14} color="#FFF" strokeWidth={2.5} />
+                        </TouchableOpacity>
                       </View>
                       <Text className="font-body-medium text-xs text-text mt-1.5" numberOfLines={1}>
                         {s.name}
                       </Text>
                     </TouchableOpacity>
-
-                    <View className="flex-row mt-1" style={{ gap: 6 }}>
-                      <TouchableOpacity
-                        onPress={() => { setSelectedSeries(s); setMoveModalOpen(true); }}
-                        className="flex-1 items-center py-1.5 rounded-lg bg-surface-elevated border border-border"
-                        activeOpacity={0.75}
-                      >
-                        <ArrowRightLeft size={12} color={colors.textSub} strokeWidth={2} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleRemove(s.seriesId, s.name)}
-                        className="flex-1 items-center py-1.5 rounded-lg bg-surface-elevated border border-error"
-                        activeOpacity={0.75}
-                      >
-                        <X size={12} color={colors.error} strokeWidth={2} />
-                      </TouchableOpacity>
-                    </View>
                   </View>
                 )}
               />
@@ -202,7 +188,7 @@ export default function PlaylistDetailScreen() {
                 backgroundColor: colors.surface,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                maxHeight: '75%',
+                maxHeight: '80%',
                 paddingBottom: 36,
               }}
             >
@@ -222,126 +208,64 @@ export default function PlaylistDetailScreen() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={{ fontFamily: 'Inter-Regular', fontSize: 12, color: colors.textMuted, paddingHorizontal: 20, marginBottom: 12 }}>
-                Choose from your currently tracked series
-              </Text>
-
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingBottom: 16 }}>
-                {(allTracking ?? []).map(t => {
-                  const added = alreadyInPlaylist.has(t.seriesId);
-                  return (
-                    <TouchableOpacity
-                      key={t.seriesId}
-                      onPress={() => !added && handleAdd({ seriesId: t.seriesId, name: t.name, posterUrl: t.posterUrl })}
-                      activeOpacity={added ? 1 : 0.75}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: 10,
-                        borderRadius: 12,
-                        backgroundColor: added ? colors.accentSubtle : colors.surfaceElevated,
-                        borderWidth: 1,
-                        borderColor: added ? colors.accent : colors.border,
-                        opacity: added ? 0.8 : 1,
-                      }}
-                    >
-                      <View style={{ width: 40, height: 56, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.border }}>
-                        {t.posterUrl && <Image source={{ uri: t.posterUrl }} style={{ flex: 1 }} contentFit="cover" />}
-                      </View>
-                      <Text style={{ flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text }} numberOfLines={1}>
-                        {t.name}
-                      </Text>
-                      {added ? (
-                        <Check size={18} color={colors.accent} strokeWidth={2.5} />
-                      ) : (
-                        <Plus size={18} color={colors.textSub} strokeWidth={2} />
-                      )}
+              <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceElevated, borderRadius: 12, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.border }}>
+                  <Search size={18} color={colors.textMuted} />
+                  <TextInput
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search your series..."
+                    placeholderTextColor={colors.textMuted}
+                    style={{ flex: 1, marginLeft: 8, fontFamily: 'Inter-Regular', fontSize: 14, color: colors.text }}
+                  />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
+                      <X size={16} color={colors.textMuted} />
                     </TouchableOpacity>
-                  );
-                })}
-                {(!allTracking || allTracking.length === 0) && (
-                  <Text style={{ fontFamily: 'Inter-Regular', fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: 24 }}>
-                    Start tracking series first to add them to playlists.
-                  </Text>
-                )}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Move to Playlist Modal */}
-        <Modal
-          visible={moveModalOpen}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setMoveModalOpen(false)}
-        >
-          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <Pressable
-              style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]}
-              onPress={() => setMoveModalOpen(false)}
-            />
-            <View
-              style={{
-                backgroundColor: colors.surface,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                paddingBottom: 36,
-                maxHeight: '55%',
-              }}
-            >
-              <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 4 }}>
-                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+                  )}
+                </View>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 }}>
-                <Text style={{ fontFamily: 'Sora-SemiBold', fontSize: 18, color: colors.text }}>Move to Playlist</Text>
-                <TouchableOpacity
-                  onPress={() => setMoveModalOpen(false)}
-                  style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <X size={16} color={colors.textSub} />
-                </TouchableOpacity>
-              </View>
-              <Text style={{ fontFamily: 'Inter-Regular', fontSize: 12, color: colors.textMuted, paddingHorizontal: 20, marginBottom: 12 }}>
-                Moving: {selectedSeries?.name}
-              </Text>
 
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 12 }}>
-                {otherPlaylists.length === 0 ? (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
+                {filteredSeries.length === 0 ? (
                   <Text style={{ fontFamily: 'Inter-Regular', fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: 24 }}>
-                    No other playlists. Create one first.
+                    {allTracking?.length === 0 ? "Start tracking series first to add them to playlists." : "No series found."}
                   </Text>
                 ) : (
-                  otherPlaylists.map(p => (
-                    <TouchableOpacity
-                      key={p.id}
-                      onPress={() => handleMove(p)}
-                      activeOpacity={0.8}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: 14,
-                        borderRadius: 12,
-                        backgroundColor: colors.surfaceElevated,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <Text style={{ fontFamily: 'Inter-Medium', fontSize: 15, color: colors.text }}>
-                        {p.name}
-                      </Text>
-                      <Text style={{ fontFamily: 'Inter-Regular', fontSize: 12, color: colors.textMuted }}>
-                        {p.series.length} series
-                      </Text>
-                    </TouchableOpacity>
-                  ))
+                  filteredSeries.map(t => {
+                    return (
+                      <TouchableOpacity
+                        key={t.seriesId}
+                        onPress={() => handleAdd({ seriesId: t.seriesId, name: t.name, posterUrl: t.posterUrl })}
+                        activeOpacity={0.75}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: 10,
+                          borderRadius: 12,
+                          backgroundColor: colors.surfaceElevated,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <View style={{ width: 40, height: 56, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.border }}>
+                          {t.posterUrl && <Image source={{ uri: t.posterUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
+                        </View>
+                        <Text style={{ flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text }} numberOfLines={1}>
+                          {t.name}
+                        </Text>
+                        <Plus size={18} color={colors.textSub} strokeWidth={2} />
+                      </TouchableOpacity>
+                    );
+                  })
                 )}
               </ScrollView>
             </View>
           </View>
         </Modal>
+
+
 
         <ConfirmModal
           visible={deleteModalOpen}

@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Star, Tv2, Calendar } from 'lucide-react-native';
+import { ArrowLeft, Star, Tv2 } from 'lucide-react-native';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
@@ -101,7 +101,7 @@ export default function SeriesHero({ series }: Props) {
 
         {series.genres.length > 0 && (
           <View className="flex-row flex-wrap mt-3" style={{ gap: 6 }}>
-            {series.genres.map(genre => (
+            {series.genres.filter((g, i, arr) => arr.findIndex(x => x.id === g.id) === i).map(genre => (
               <View key={genre.id} className="bg-accent-subtle rounded-full px-3 py-1">
                 <Text className="font-body-medium text-xs text-accent">{genre.name}</Text>
               </View>

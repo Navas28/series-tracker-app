@@ -19,16 +19,16 @@ export default function PlaylistCard({ playlist }: Props) {
     <TouchableOpacity
       onPress={() => router.push(`/playlists/${playlist.id}`)}
       activeOpacity={0.8}
-      className="bg-surface rounded-xl border border-border overflow-hidden mb-3 mx-5"
+      className="mb-1"
     >
-      <View className="flex-row" style={{ height: 72 }}>
+      <View className="bg-surface-elevated rounded-xl border border-border overflow-hidden mb-2" style={{ aspectRatio: 1 }}>
         {previews.length > 0 ? (
-          <View className="flex-row flex-wrap" style={{ width: 96 }}>
+          <View className="flex-row flex-wrap flex-1">
             {[0, 1, 2, 3].map(i => {
               const item = previews[i];
               const url = item?.posterUrl ?? null;
               return (
-                <View key={i} className="bg-surface-elevated" style={{ width: 48, height: 36 }}>
+                <View key={i} className="bg-surface" style={{ width: '50%', height: '50%' }}>
                   {url ? (
                     <Image source={{ uri: url }} style={{ flex: 1 }} contentFit="cover" />
                   ) : null}
@@ -37,23 +37,17 @@ export default function PlaylistCard({ playlist }: Props) {
             })}
           </View>
         ) : (
-          <View
-            className="bg-surface-elevated items-center justify-center"
-            style={{ width: 96 }}
-          >
-            <ListMusic size={24} color={colors.textMuted} strokeWidth={1.5} />
+          <View className="flex-1 items-center justify-center">
+            <ListMusic size={32} color={colors.textMuted} strokeWidth={1.5} />
           </View>
         )}
-
-        <View className="flex-1 px-3 justify-center">
-          <Text className="font-heading-regular text-sm text-text" numberOfLines={1}>
-            {playlist.name}
-          </Text>
-          <Text className="font-body text-xs text-text-sub mt-0.5">
-            {playlist.series.length} series
-          </Text>
-        </View>
       </View>
+      <Text className="font-heading-regular text-sm text-text" numberOfLines={1}>
+        {playlist.name}
+      </Text>
+      <Text className="font-body text-xs text-text-sub mt-0.5">
+        {playlist.series.length} series
+      </Text>
     </TouchableOpacity>
   );
 }

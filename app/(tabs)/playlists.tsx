@@ -52,11 +52,12 @@ export default function PlaylistsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
         ListHeaderComponent={isLoading ? (
-          <View style={{ gap: 12, paddingBottom: 12 }}>
-            {[0, 1, 2].map(i => (
-              <View key={i} className="bg-surface rounded-xl border border-border p-4" style={{ height: 76 }}>
-                <Skeleton width="55%" height={14} />
-                <Skeleton width="35%" height={10} style={{ marginTop: 8 }} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingBottom: 12 }}>
+            {[0, 1, 2, 3].map(i => (
+              <View key={i} style={{ width: '48%', marginBottom: 16 }}>
+                <View style={{ aspectRatio: 1, width: '100%', marginBottom: 8, backgroundColor: colors.surfaceElevated, opacity: 0.55, borderRadius: 12 }} />
+                <Skeleton width="70%" height={14} />
+                <Skeleton width="40%" height={10} style={{ marginTop: 4 }} />
               </View>
             ))}
           </View>
@@ -81,7 +82,12 @@ export default function PlaylistsScreen() {
             </TouchableOpacity>
           </View>
         ) : null}
-        renderItem={({ item: playlist }) => <PlaylistCard playlist={playlist} />}
+        numColumns={2}
+        renderItem={({ item: playlist, index }) => (
+          <View style={{ flex: 1, paddingLeft: index % 2 === 1 ? 6 : 0, paddingRight: index % 2 === 0 ? 6 : 0 }}>
+            <PlaylistCard playlist={playlist} />
+          </View>
+        )}
       />
 
       <CreatePlaylistModal visible={showCreate} onClose={() => setShowCreate(false)} />

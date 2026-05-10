@@ -1,6 +1,51 @@
 import { Share } from 'react-native';
 import { getAllTracking, SeriesTracking } from './firestore/tracking';
 
+function isOngoing(status: string): boolean {
+  return status === 'Returning Series' || status === 'In Production' || status === 'To Be Determined';
+}
+
+function formatWatchTime(totalMinutes: number): { full: string; hours: string } {
+  const totalHours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  const mPart = mins > 0 ? ` ${mins}m` : '';
+  if (totalHours < 24) return { full: `${totalHours}h${mPart}`, hours: '' };
+  const days = Math.floor(totalHours / 24);
+  const hrs = totalHours % 24;
+  const hPart = hrs > 0 ? ` ${hrs}h` : '';
+  return {
+    full: `${days}d${hPart}${mPart}`,
+    hours: `${totalHours}h${mPart}`,
+  };
+}
+
+function buildStats(series: SeriesTracking[]): string[] {
+  const total = series.length;
+  const ongoing = series.filter(t => isOngoing(t.status)).length;
+  const ended = series.filter(t => !isOngoing(t.status)).length;
+  const completed = series.filter(
+    t => t.totalEpisodes > 0 && Object.keys(t.watched).length >= t.totalEpisodes,
+  ).length;
+  const episodesWatched = series.reduce((sum, t) => sum + Object.keys(t.watched).length, 0);
+  const totalMinutes = series.reduce(
+    (sum, t) => sum + Object.keys(t.watched).length * (t.averageRuntime ?? 0),
+    0,
+  );
+  const watchTime = formatWatchTime(Math.round(totalMinutes));
+
+  return [
+    '┌─ STATS ───────────────────────────────┐',
+    `  Total Series   : ${total}`,
+    `  Ongoing        : ${ongoing}`,
+    `  Ended          : ${ended}`,
+    `  Completed      : ${completed}`,
+    `  Episodes       : ${episodesWatched} watched`,
+    `  Watch Time     : ${watchTime.full}`,
+    ...(watchTime.hours ? [`               ( ${watchTime.hours} )`] : []),
+    '└───────────────────────────────────────┘',
+  ];
+}
+
 function buildSeasonSummary(watched: Record<string, number | true>): Record<string, number> {
   const summary: Record<string, number> = {};
   for (const key of Object.keys(watched)) {
@@ -14,13 +59,14 @@ function buildSeasonSummary(watched: Record<string, number | true>): Record<stri
 }
 
 function formatTxt(series: SeriesTracking[]): string {
-  const divider = '─'.repeat(36);
+  const divider = '─'.repeat(39);
   const date = new Date().toISOString().split('T')[0];
 
   const lines: string[] = [
     'BINGE — My Series Export',
     `Exported : ${date}`,
-    `Total    : ${series.length} series tracked`,
+    '',
+    ...buildStats(series),
     '',
   ];
 
