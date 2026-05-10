@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart2, Bell, ChevronRight, LogOut, Download } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors } from '@/constants/theme';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -72,7 +73,11 @@ export default function ProfileScreen() {
               Account
             </Text>
             <View className="bg-surface rounded-xl border border-border overflow-hidden">
-              <TouchableOpacity className="flex-row items-center px-4 py-4" activeOpacity={0.7}>
+              <TouchableOpacity
+                className="flex-row items-center px-4 py-4"
+                activeOpacity={0.7}
+                onPress={() => router.push('/stats')}
+              >
                 <View className="w-9 h-9 rounded-lg bg-watched-subtle items-center justify-center mr-4">
                   <BarChart2 size={18} color={colors.watched} strokeWidth={1.5} />
                 </View>

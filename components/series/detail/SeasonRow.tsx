@@ -9,16 +9,25 @@ import { formatEpisodeAirDate, isReleased } from '@/utils/date';
 import type { ShowSeason } from '@/services/api/types';
 import type { SeriesTracking } from '@/services/firestore/tracking';
 
+function formatRuntime(minutes: number): string {
+  if (minutes <= 0) return '';
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 interface Props {
   season: ShowSeason;
   seriesId: number;
   tracking: SeriesTracking | null;
   releasedEpisodeCount: number;
+  averageRuntime?: number;
   onToggleEpisode: (seasonNum: number, episodeNum: number) => void;
   onMarkSeason: (seasonNum: number, episodeCount: number, unwatch: boolean) => void;
 }
 
-function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, onToggleEpisode, onMarkSeason }: Props) {
+function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRuntime, onToggleEpisode, onMarkSeason }: Props) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
   const [expanded, setExpanded] = useState(false);
@@ -42,6 +51,23 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, onToggleE
     [watchedCount, total],
   );
   const seasonReleased = isReleased(season.air_date);
+
+  const seasonTotalMinutes = useMemo(() => {
+    if (details?.episodes) {
+      return details.episodes.reduce((sum, ep) => sum + (ep.runtime ?? 0), 0);
+    }
+    return averageRuntime ? Math.round(averageRuntime * season.episode_count) : 0;
+  }, [details?.episodes, averageRuntime, season.episode_count]);
+
+  const seasonWatchedMinutes = useMemo(() => {
+    if (details?.episodes && tracking) {
+      return details.episodes.reduce((sum, ep) => {
+        const key = `S${season.season_number}E${ep.episode_number}`;
+        return sum + (tracking.watched[key] ? (ep.runtime ?? 0) : 0);
+      }, 0);
+    }
+    return averageRuntime && watchedCount > 0 ? Math.round(averageRuntime * watchedCount) : 0;
+  }, [details?.episodes, tracking, season.season_number, averageRuntime, watchedCount]);
 
   return (
     <View
@@ -90,7 +116,15 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, onToggleE
               )}
             </View>
             <Text className="font-body text-xs text-text-muted mt-0.5">
-              {[season.air_date?.slice(0, 4), `${total} eps`].filter(Boolean).join(' · ')}
+              {[
+                season.air_date?.slice(0, 4),
+                `${total} eps`,
+                seasonTotalMinutes > 0
+                  ? (tracking && seasonWatchedMinutes > 0 && seasonWatchedMinutes < seasonTotalMinutes
+                      ? `${formatRuntime(seasonWatchedMinutes)} / ${formatRuntime(seasonTotalMinutes)}`
+                      : formatRuntime(seasonTotalMinutes))
+                  : null,
+              ].filter(Boolean).join(' · ')}
             </Text>
           </View>
 
@@ -200,11 +234,18 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, onToggleE
                   >
                     {ep.name}
                   </Text>
-                  {upcomingLabel ? (
-                    <Text className="font-body text-[10px] text-accent mt-0.5">
-                      {upcomingLabel}
-                    </Text>
-                  ) : null}
+                  <View className="flex-row items-center mt-0.5" style={{ gap: 6 }}>
+                    {ep.runtime ? (
+                      <Text className="font-mono text-[10px] text-text-muted">
+                        {formatRuntime(ep.runtime)}
+                      </Text>
+                    ) : null}
+                    {upcomingLabel ? (
+                      <Text className="font-body text-[10px] text-accent">
+                        {upcomingLabel}
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
 
                 <TouchableOpacity

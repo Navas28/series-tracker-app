@@ -41,8 +41,12 @@ export async function getSeasonExtended(seasonId: number): Promise<TVDBSeasonExt
   return res.data.data;
 }
 
-export async function getSeriesEpisodeCounts(id: number): Promise<Record<number, number>> {
+export async function getSeriesEpisodeCounts(
+  id: number,
+): Promise<{ counts: Record<number, number>; averageRuntime: number | null }> {
   const counts: Record<number, number> = {};
+  let totalRuntime = 0;
+  let runtimeCount = 0;
   try {
     let page = 0;
     while (true) {
@@ -54,15 +58,20 @@ export async function getSeriesEpisodeCounts(id: number): Promise<Record<number,
       for (const ep of episodes) {
         if (ep.number > 0 && ep.seasonNumber > 0) {
           counts[ep.seasonNumber] = (counts[ep.seasonNumber] ?? 0) + 1;
+          if (ep.runtime && ep.runtime > 0) {
+            totalRuntime += ep.runtime;
+            runtimeCount++;
+          }
         }
       }
       if (episodes.length < 100) break;
       page++;
     }
   } catch {
-    // return whatever counts we have so far
+    // return whatever we have so far
   }
-  return counts;
+  const averageRuntime = runtimeCount > 0 ? Math.round(totalRuntime / runtimeCount) : null;
+  return { counts, averageRuntime };
 }
 
 export async function searchSeries(query: string): Promise<TVDBSearchResult[]> {

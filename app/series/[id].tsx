@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, ActivityIndicator, RefreshControl } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
@@ -19,9 +19,16 @@ export default function SeriesDetailScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  const { data: series, isLoading, isError, error } = useSeriesDetails(Number(id));
-  const { data: tracking } = useSeriesTracking(Number(id));
+  const { data: series, isLoading, isError, error, refetch: refetchSeries } = useSeriesDetails(Number(id));
+  const { data: tracking, refetch: refetchTracking } = useSeriesTracking(Number(id));
   const [showMilestone, setShowMilestone] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchSeries(), refetchTracking()]);
+    setRefreshing(false);
+  };
   const wasCompletedRef = useRef(false);
   const isInitialLoad = useRef(true);
 
@@ -76,6 +83,9 @@ export default function SeriesDetailScreen() {
           className="flex-1 bg-background"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          }
         >
           <SeriesHero series={series} />
           <TrackButton series={series} />
@@ -93,6 +103,11 @@ export default function SeriesDetailScreen() {
         seriesName={series?.name}
         totalEpisodes={series?.number_of_episodes}
         totalSeasons={series?.number_of_seasons}
+        totalMinutes={
+          series && series.averageRuntime
+            ? Math.round(series.averageRuntime * series.number_of_episodes)
+            : 0
+        }
       />
     </>
   );

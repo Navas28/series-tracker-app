@@ -1,7 +1,7 @@
 import { Share } from 'react-native';
 import { getAllTracking, SeriesTracking } from './firestore/tracking';
 
-function buildSeasonSummary(watched: Record<string, true>): Record<string, number> {
+function buildSeasonSummary(watched: Record<string, number | true>): Record<string, number> {
   const summary: Record<string, number> = {};
   for (const key of Object.keys(watched)) {
     const match = key.match(/^S(\d+)E\d+$/);

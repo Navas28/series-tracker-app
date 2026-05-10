@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useCreatePlaylist } from '@/hooks/usePlaylists';
+
+const colors = Colors.dark;
 
 interface Props {
   visible: boolean;
@@ -20,8 +23,6 @@ interface Props {
 }
 
 export default function CreatePlaylistModal({ visible, onClose }: Props) {
-  const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
   const [name, setName] = useState('');
   const { mutate: createPlaylist, isPending } = useCreatePlaylist();
 
@@ -37,47 +38,74 @@ export default function CreatePlaylistModal({ visible, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1 justify-end"
-        style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-      >
-        <TouchableOpacity className="flex-1" activeOpacity={1} onPress={onClose} />
-        <View className="bg-surface rounded-t-2xl px-5 pt-5 pb-8">
-          <View className="flex-row items-center justify-between mb-5">
-            <Text className="font-heading text-lg text-text">New Playlist</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={8}>
-              <X size={20} color={colors.textMuted} />
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(1,13,35,0.75)' }}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingHorizontal: 20,
+              paddingTop: 20,
+              paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-5">
+              <Text className="font-heading text-lg text-text">New Playlist</Text>
+              <TouchableOpacity onPress={onClose} hitSlop={8}>
+                <X size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Playlist name"
+              placeholderTextColor={colors.textMuted}
+              style={{
+                backgroundColor: colors.surfaceElevated,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontFamily: 'Inter-Regular',
+                fontSize: 14,
+                color: colors.text,
+                marginBottom: 16,
+              }}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleCreate}
+            />
+
+            <TouchableOpacity
+              onPress={handleCreate}
+              disabled={!name.trim() || isPending}
+              activeOpacity={0.8}
+              style={{
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+                backgroundColor: name.trim() ? colors.accent : colors.surfaceElevated,
+              }}
+            >
+              {isPending ? (
+                <ActivityIndicator size="small" color={colors.accentFg} />
+              ) : (
+                <Text style={{
+                  fontFamily: 'Inter-SemiBold',
+                  fontSize: 14,
+                  color: name.trim() ? colors.accentFg : colors.textMuted,
+                }}>
+                  Create Playlist
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
-
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Playlist name"
-            placeholderTextColor={colors.textMuted}
-            className="bg-surface-elevated border border-border rounded-xl px-4 py-3 font-body text-sm text-text mb-4"
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={handleCreate}
-          />
-
-          <TouchableOpacity
-            onPress={handleCreate}
-            disabled={!name.trim() || isPending}
-            activeOpacity={0.8}
-            className={`rounded-xl py-3.5 items-center ${name.trim() ? 'bg-accent' : 'bg-surface-elevated'}`}
-          >
-            {isPending ? (
-              <ActivityIndicator size="small" color={colors.accentFg} />
-            ) : (
-              <Text className={`font-body-semibold text-sm ${name.trim() ? 'text-accent-fg' : 'text-text-muted'}`}>
-                Create Playlist
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

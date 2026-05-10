@@ -94,6 +94,7 @@ export interface TVDBSeasonBase {
 
 export interface TVDBSeriesExtendedRecord extends TVDBSeriesBaseRecord {
   overview: string | null;
+  averageRuntime: number | null;
   artworks: TVDBArtwork[];
   characters: TVDBCharacter[];
   genres: TVDBGenre[];

@@ -59,6 +59,7 @@ export interface ShowDetails extends ShowListItem {
   status: string;
   number_of_seasons: number;
   number_of_episodes: number;
+  averageRuntime: number | null;
   networks: ShowNetwork[];
   seasons: ShowSeason[];
   cast: ShowCastMember[];

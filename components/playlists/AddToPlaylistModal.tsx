@@ -60,7 +60,6 @@ export default function AddToPlaylistModal({ visible, onClose, series }: Props) 
             <FlashList
               data={playlists}
               keyExtractor={p => p.id}
-              estimatedItemSize={60}
               showsVerticalScrollIndicator={false}
               renderItem={({ item: playlist }) => {
                 const alreadyIn =

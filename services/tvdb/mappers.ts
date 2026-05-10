@@ -141,6 +141,7 @@ export function tvdbExtendedToDetails(
     status: mapStatus(s.status?.name),
     number_of_seasons: officialSeasons.length,
     number_of_episodes,
+    averageRuntime: s.averageRuntime ?? null,
     networks: network ? [{ id: network.id, name: network.name, logo_path: null }] : [],
     seasons: officialSeasons,
     cast,

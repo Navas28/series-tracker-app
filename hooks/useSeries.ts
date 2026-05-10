@@ -67,11 +67,12 @@ export function useSeriesDetails(showId: number) {
   return useQuery({
     queryKey: ['series', 'details', showId],
     queryFn: async (): Promise<ShowDetails> => {
-      const [extended, episodeCounts] = await Promise.all([
+      const [extended, { counts: episodeCounts, averageRuntime: episodeRuntime }] = await Promise.all([
         getSeriesExtended(showId),
         getSeriesEpisodeCounts(showId),
       ]);
-      return tvdbExtendedToDetails(extended, episodeCounts);
+      const details = tvdbExtendedToDetails(extended, episodeCounts);
+      return { ...details, averageRuntime: details.averageRuntime ?? episodeRuntime };
     },
     enabled: showId > 0,
     staleTime: 1000 * 60 * 10,

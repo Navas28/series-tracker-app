@@ -17,9 +17,10 @@ export interface SeriesTracking {
   status: string;
   totalSeasons: number;
   totalEpisodes: number;
+  averageRuntime: number;
   addedAt: number;
   lastWatchedAt: number;
-  watched: Record<string, true>;
+  watched: Record<string, number | true>;
 }
 
 export type TrackingInput = Omit<SeriesTracking, 'addedAt' | 'lastWatchedAt' | 'watched'>;
@@ -59,6 +60,7 @@ export async function addTracking(userId: string, input: TrackingInput): Promise
     if (snap.exists()) return;
     await setDoc(ref, {
       ...input,
+      averageRuntime: input.averageRuntime ?? 0,
       watched: {},
       addedAt: Date.now(),
       lastWatchedAt: Date.now(),
@@ -105,8 +107,11 @@ export async function toggleEpisode(
       delete newWatched[key];
     } else {
       // Mark this episode + all earlier episodes in same season as watched
+      const now = Date.now();
       for (let ep = 1; ep <= episodeNum; ep++) {
-        newWatched[`S${seasonNum}E${ep}`] = true;
+        if (!newWatched[`S${seasonNum}E${ep}`]) {
+          newWatched[`S${seasonNum}E${ep}`] = now;
+        }
       }
     }
 
@@ -143,12 +148,15 @@ export async function markSeasonWatched(
     const newWatched = { ...data.watched };
 
     // Mark all prior seasons if their episode counts are provided
+    const now = Date.now();
     if (seasonEpisodeCounts) {
       for (const [sNum, sCount] of Object.entries(seasonEpisodeCounts)) {
         const n = Number(sNum);
         if (n < seasonNum) {
           for (let ep = 1; ep <= sCount; ep++) {
-            newWatched[`S${n}E${ep}`] = true;
+            if (!newWatched[`S${n}E${ep}`]) {
+              newWatched[`S${n}E${ep}`] = now;
+            }
           }
         }
       }
@@ -156,7 +164,9 @@ export async function markSeasonWatched(
 
     // Mark released episodes in the target season
     for (let i = 1; i <= episodeCount; i++) {
-      newWatched[`S${seasonNum}E${i}`] = true;
+      if (!newWatched[`S${seasonNum}E${i}`]) {
+        newWatched[`S${seasonNum}E${i}`] = now;
+      }
     }
 
     const update: Partial<SeriesTracking> = { watched: newWatched, lastWatchedAt: Date.now() };
@@ -192,7 +202,7 @@ export async function markSeasonUnwatched(
   }
 }
 
-export function countWatchedInSeason(watched: Record<string, true>, seasonNum: number): number {
+export function countWatchedInSeason(watched: Record<string, number | true>, seasonNum: number): number {
   return Object.keys(watched).filter(k => k.startsWith(`S${seasonNum}E`)).length;
 }
 

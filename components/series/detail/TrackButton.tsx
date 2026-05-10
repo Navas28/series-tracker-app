@@ -35,6 +35,7 @@ export default function TrackButton({ series }: Props) {
         status: series.status,
         totalSeasons: series.number_of_seasons,
         totalEpisodes: series.number_of_episodes,
+        averageRuntime: series.averageRuntime ?? 0,
       });
     }
   };
