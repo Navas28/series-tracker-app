@@ -12,6 +12,7 @@ import SeriesCastRow from '@/components/series/detail/SeriesCastRow';
 import CompletionMilestone from '@/components/series/detail/CompletionMilestone';
 import SeriesRow from '@/components/series/SeriesRow';
 import { useState, useEffect, useRef } from 'react';
+import { isOngoing } from '@/components/tracking/TrackedSeriesCard';
 
 export default function SeriesDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,12 +23,19 @@ export default function SeriesDetailScreen() {
   const { data: tracking } = useSeriesTracking(Number(id));
   const [showMilestone, setShowMilestone] = useState(false);
   const wasCompletedRef = useRef(false);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     if (tracking && series) {
       const watchedCount = Object.keys(tracking.watched).length;
       const total = series.number_of_episodes;
-      const isCurrentlyCompleted = total > 0 && watchedCount >= total;
+      const isCurrentlyCompleted = total > 0 && watchedCount >= total && !isOngoing(series.status);
+
+      if (isInitialLoad.current) {
+        wasCompletedRef.current = isCurrentlyCompleted;
+        isInitialLoad.current = false;
+        return;
+      }
 
       if (!wasCompletedRef.current && isCurrentlyCompleted) {
         setShowMilestone(true);

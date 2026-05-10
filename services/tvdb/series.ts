@@ -5,6 +5,7 @@ import type {
   TVDBSeasonExtended,
   TVDBSearchResult,
   TVDBEpisode,
+  TVDBGenre,
 } from './types';
 
 type ApiResponse<T> = { data: T; status: string };
@@ -69,4 +70,28 @@ export async function searchSeries(query: string): Promise<TVDBSearchResult[]> {
     params: { q: query, type: 'series', limit: 20 },
   });
   return res.data.data ?? [];
+}
+
+export async function getGenres(): Promise<TVDBGenre[]> {
+  const res = await client.get<ApiResponse<TVDBGenre[]>>('/genres');
+  return res.data.data ?? [];
+}
+
+export async function discoverByGenres(genreIds: number[], page = 0): Promise<TVDBSeriesBaseRecord[]> {
+  const responses = await Promise.all(
+    genreIds.map(genre =>
+      client
+        .get<ApiResponse<TVDBSeriesBaseRecord[]>>('/series/filter', {
+          params: { sort: 'score', sortType: 'desc', country: 'usa', lang: 'eng', genre, page },
+        })
+        .then(res => res.data.data ?? [])
+        .catch(() => [] as TVDBSeriesBaseRecord[]),
+    ),
+  );
+  const seen = new Set<number>();
+  return responses.flat().filter(item => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 }

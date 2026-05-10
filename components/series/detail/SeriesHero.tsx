@@ -80,18 +80,9 @@ export default function SeriesHero({ series }: Props) {
             <View className="flex-row items-center mt-2 flex-wrap" style={{ gap: 8 }}>
               <View className={`rounded px-2 py-0.5 ${isEnded ? 'bg-surface-elevated' : 'bg-watched-subtle'}`}>
                 <Text className={`font-body-medium text-[10px] ${isEnded ? 'text-text-muted' : 'text-watched'}`}>
-                  {series.status.toUpperCase()}
+                  {series.status}
                 </Text>
               </View>
-
-              {series.next_episode_to_air && (
-                <View className="flex-row items-center bg-accent-subtle rounded px-2 py-0.5" style={{ gap: 4 }}>
-                  <Calendar size={10} color={colors.accent} />
-                  <Text className="font-body-medium text-[10px] text-accent">
-                    NEXT: {series.next_episode_to_air.air_date}
-                  </Text>
-                </View>
-              )}
             </View>
           </View>
         </View>

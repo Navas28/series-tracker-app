@@ -78,6 +78,8 @@ export async function removeTracking(userId: string, seriesId: number): Promise<
   }
 }
 
+type TrackingMeta = Pick<SeriesTracking, 'status' | 'totalEpisodes' | 'totalSeasons'>;
+
 /**
  * Toggle a single episode watched state.
  * When marking as WATCHED: also marks all earlier episodes in the same season (1 → episodeNum-1).
@@ -88,6 +90,7 @@ export async function toggleEpisode(
   seriesId: number,
   seasonNum: number,
   episodeNum: number,
+  meta?: TrackingMeta,
 ): Promise<void> {
   try {
     const ref = trackingRef(userId, seriesId);
@@ -107,7 +110,13 @@ export async function toggleEpisode(
       }
     }
 
-    await updateDoc(ref, { watched: newWatched, lastWatchedAt: Date.now() });
+    const update: Partial<SeriesTracking> = { watched: newWatched, lastWatchedAt: Date.now() };
+    if (meta) {
+      if (meta.status !== data.status) update.status = meta.status;
+      if (meta.totalEpisodes !== data.totalEpisodes) update.totalEpisodes = meta.totalEpisodes;
+      if (meta.totalSeasons !== data.totalSeasons) update.totalSeasons = meta.totalSeasons;
+    }
+    await updateDoc(ref, update);
   } catch (e) {
     console.error('[toggleEpisode] error:', e);
     throw e;
@@ -124,6 +133,7 @@ export async function markSeasonWatched(
   seasonNum: number,
   episodeCount: number,
   seasonEpisodeCounts?: Record<number, number>,
+  meta?: TrackingMeta,
 ): Promise<void> {
   try {
     const ref = trackingRef(userId, seriesId);
@@ -144,12 +154,18 @@ export async function markSeasonWatched(
       }
     }
 
-    // Mark all episodes in the target season
+    // Mark released episodes in the target season
     for (let i = 1; i <= episodeCount; i++) {
       newWatched[`S${seasonNum}E${i}`] = true;
     }
 
-    await updateDoc(ref, { watched: newWatched, lastWatchedAt: Date.now() });
+    const update: Partial<SeriesTracking> = { watched: newWatched, lastWatchedAt: Date.now() };
+    if (meta) {
+      if (meta.status !== data.status) update.status = meta.status;
+      if (meta.totalEpisodes !== data.totalEpisodes) update.totalEpisodes = meta.totalEpisodes;
+      if (meta.totalSeasons !== data.totalSeasons) update.totalSeasons = meta.totalSeasons;
+    }
+    await updateDoc(ref, update);
   } catch (e) {
     console.error('[markSeasonWatched] error:', e);
     throw e;

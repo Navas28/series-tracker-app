@@ -5,6 +5,8 @@ import {
   getSeriesEpisodeCounts,
   getSeasonExtended,
   searchSeries,
+  getGenres,
+  discoverByGenres,
 } from '../services/tvdb/series';
 import {
   tvdbBaseToListItem,
@@ -13,6 +15,7 @@ import {
   tvdbSearchToListItem,
 } from '../services/tvdb/mappers';
 import type { ShowListItem, ShowDetails, ShowSeasonDetails } from '../services/api/types';
+import type { TVDBGenre } from '../services/tvdb/types';
 
 export function useTrendingSeries() {
   return useQuery({
@@ -109,16 +112,28 @@ export function useSearchSeries(query: string) {
   });
 }
 
-export function useDiscoverSeries(genre: string | null) {
+export function useGenres() {
+  return useQuery<TVDBGenre[]>({
+    queryKey: ['genres'],
+    queryFn: getGenres,
+    staleTime: Infinity,
+  });
+}
+
+export function useDiscoverSeries(genreIds: number[]) {
   return useInfiniteQuery({
-    queryKey: ['series', 'discover', genre],
-    queryFn: async ({ pageParam }: { pageParam: number }) => ({
-      results: [] as ShowListItem[],
-      page: pageParam,
-      hasMore: false,
-    }),
+    queryKey: ['series', 'discover', genreIds],
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
+      const items = await discoverByGenres(genreIds, pageParam);
+      return {
+        results: items.map(tvdbBaseToListItem),
+        page: pageParam,
+        hasMore: items.length > 0,
+      };
+    },
     initialPageParam: 0,
-    getNextPageParam: () => undefined,
-    enabled: false,
+    getNextPageParam: lastPage => (lastPage.hasMore ? lastPage.page + 1 : undefined),
+    enabled: genreIds.length > 0,
+    staleTime: 1000 * 60 * 10,
   });
 }

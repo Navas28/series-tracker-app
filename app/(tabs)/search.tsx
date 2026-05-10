@@ -9,26 +9,27 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MotiView, AnimatePresence } from 'moti';
 import { X, SlidersHorizontal, Check } from 'lucide-react-native';
 import { Colors } from '@/constants/theme';
-import { useSearchSeries, useDiscoverSeries } from '@/hooks/useSeries';
+import { useSearchSeries, useDiscoverSeries, useGenres } from '@/hooks/useSeries';
 import SeriesCard from '@/components/series/SeriesCard';
 import { SkeletonGrid } from '@/components/ui/Skeleton';
-import { SHOW_GENRES, type ShowListItem } from '@/services/api/types';
+import type { ShowListItem } from '@/services/api/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 40 - 12) / 2;
 const colors = Colors.dark;
 
 export default function SearchScreen() {
-  const [query, setQuery]               = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
 
+  const { data: genreList, isLoading: loadingGenres } = useGenres();
   const { data: searchData, isLoading: searching } = useSearchSeries(query);
 
   const {
@@ -37,11 +38,11 @@ export default function SearchScreen() {
     fetchNextPage: fetchMoreDiscover,
     hasNextPage: hasMoreDiscover,
     isFetchingNextPage: fetchingMoreDiscover,
-  } = useDiscoverSeries(selectedGenre);
+  } = useDiscoverSeries(selectedGenres);
 
-  const isSearching  = query.trim().length > 0;
-  const isFiltering  = !isSearching && selectedGenre !== null;
-  const activeFilter = selectedGenre !== null;
+  const isSearching = query.trim().length > 0;
+  const isFiltering = !isSearching && selectedGenres.length > 0;
+  const activeFilter = selectedGenres.length > 0;
 
   let results: ShowListItem[] = [];
   if (isSearching) {
@@ -50,8 +51,16 @@ export default function SearchScreen() {
     results = discoverData?.pages.flatMap(p => p.results) ?? [];
   }
 
-  const isLoading     = isSearching ? searching : isFiltering ? discovering : false;
+  const isLoading = isSearching ? searching : isFiltering ? discovering : false;
   const isFetchingMore = isFiltering ? fetchingMoreDiscover : false;
+
+  const toggleGenre = (id: number) => {
+    setSelectedGenres(prev =>
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id],
+    );
+  };
+
+  const clearGenres = () => setSelectedGenres([]);
 
   const loadMore = useCallback(() => {
     if (!isSearching && hasMoreDiscover && !fetchingMoreDiscover) {
@@ -68,6 +77,12 @@ export default function SearchScreen() {
       </View>
     );
   };
+
+  const activeGenreLabel = activeFilter
+    ? selectedGenres.length === 1
+      ? genreList?.find(g => g.id === selectedGenres[0])?.name ?? 'Genre'
+      : `${selectedGenres.length} Genres`
+    : null;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -112,10 +127,8 @@ export default function SearchScreen() {
       {activeFilter && !isSearching && (
         <View className="flex-row items-center px-5 pb-2">
           <View className="flex-row items-center bg-accent-subtle rounded-full px-3 py-1 border border-accent gap-1">
-            <Text className="font-body-medium text-xs text-accent">
-              {SHOW_GENRES.find(g => g.id === selectedGenre)?.name}
-            </Text>
-            <TouchableOpacity onPress={() => setSelectedGenre(null)} hitSlop={6}>
+            <Text className="font-body-medium text-xs text-accent">{activeGenreLabel}</Text>
+            <TouchableOpacity onPress={clearGenres} hitSlop={6}>
               <X size={12} color={colors.accent} />
             </TouchableOpacity>
           </View>
@@ -168,143 +181,132 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {/* Genre Filter Modal — keep sheet animations */}
       <Modal
         visible={filterModalOpen}
         transparent
-        animationType="none"
+        animationType="slide"
         onRequestClose={() => setFilterModalOpen(false)}
       >
-        <AnimatePresence>
-          {filterModalOpen && (
-            <>
-              <MotiView
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ type: 'timing', duration: 200 }}
-                style={{ ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay }}
-              >
-                <Pressable style={{ flex: 1 }} onPress={() => setFilterModalOpen(false)} />
-              </MotiView>
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable
+            style={{ ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay }}
+            onPress={() => setFilterModalOpen(false)}
+          />
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxHeight: '75%',
+              paddingBottom: 32,
+            }}
+          >
+            <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+              <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            </View>
 
-              <MotiView
-                from={{ translateY: 600 }}
-                animate={{ translateY: 0 }}
-                exit={{ translateY: 600 }}
-                transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: colors.surface,
-                  borderTopLeftRadius: 24,
-                  borderTopRightRadius: 24,
-                  maxHeight: '75%',
-                  paddingBottom: 32,
-                }}
-              >
-                <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
-                  <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
-                </View>
-
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                }}>
-                  <Text style={{ fontFamily: 'Sora-SemiBold', fontSize: 18, color: colors.text }}>
-                    Browse by Genre
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-                    {activeFilter && (
-                      <TouchableOpacity onPress={() => setSelectedGenre(null)}>
-                        <Text style={{ fontFamily: 'Inter-Medium', fontSize: 13, color: colors.accent }}>
-                          Clear
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      onPress={() => setFilterModalOpen(false)}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: colors.surfaceElevated,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <X size={16} color={colors.textSub} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
-                >
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {SHOW_GENRES.map(genre => {
-                      const active = selectedGenre === genre.id;
-                      return (
-                        <TouchableOpacity
-                          key={genre.id}
-                          onPress={() => setSelectedGenre(active ? null : genre.id)}
-                          activeOpacity={0.75}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 6,
-                            paddingHorizontal: 14,
-                            paddingVertical: 9,
-                            borderRadius: 999,
-                            borderWidth: 1,
-                            backgroundColor: active ? colors.accent : colors.surfaceElevated,
-                            borderColor: active ? colors.accent : colors.border,
-                          }}
-                        >
-                          {active && <Check size={12} color={colors.accentFg} strokeWidth={2.5} />}
-                          <Text style={{
-                            fontFamily: 'Inter-Medium',
-                            fontSize: 13,
-                            color: active ? colors.accentFg : colors.text,
-                          }}>
-                            {genre.name}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </ScrollView>
-
-                <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
-                  <TouchableOpacity
-                    onPress={() => setFilterModalOpen(false)}
-                    activeOpacity={0.85}
-                    style={{
-                      backgroundColor: colors.accent,
-                      borderRadius: 14,
-                      paddingVertical: 15,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{
-                      fontFamily: 'Inter-SemiBold',
-                      fontSize: 15,
-                      color: colors.accentFg,
-                    }}>
-                      Show Results {results.length > 0 ? `(${results.length}+)` : ''}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+            }}>
+              <Text style={{ fontFamily: 'Sora-SemiBold', fontSize: 18, color: colors.text }}>
+                Browse by Genre
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                {activeFilter && (
+                  <TouchableOpacity onPress={clearGenres}>
+                    <Text style={{ fontFamily: 'Inter-Medium', fontSize: 13, color: colors.accent }}>
+                      Clear
                     </Text>
                   </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  onPress={() => setFilterModalOpen(false)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: colors.surfaceElevated,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X size={16} color={colors.textSub} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+            >
+              {loadingGenres ? (
+                <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={colors.accent} />
                 </View>
-              </MotiView>
-            </>
-          )}
-        </AnimatePresence>
+              ) : (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {(genreList ?? []).map(genre => {
+                    const active = selectedGenres.includes(genre.id);
+                    return (
+                      <TouchableOpacity
+                        key={genre.id}
+                        onPress={() => toggleGenre(genre.id)}
+                        activeOpacity={0.75}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingHorizontal: 14,
+                          paddingVertical: 9,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          backgroundColor: active ? colors.accent : colors.surfaceElevated,
+                          borderColor: active ? colors.accent : colors.border,
+                        }}
+                      >
+                        {active && <Check size={12} color={colors.accentFg} strokeWidth={2.5} />}
+                        <Text style={{
+                          fontFamily: 'Inter-Medium',
+                          fontSize: 13,
+                          color: active ? colors.accentFg : colors.text,
+                        }}>
+                          {genre.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+              <TouchableOpacity
+                onPress={() => setFilterModalOpen(false)}
+                activeOpacity={0.85}
+                style={{
+                  backgroundColor: selectedGenres.length > 0 ? colors.accent : colors.surfaceElevated,
+                  borderRadius: 14,
+                  paddingVertical: 15,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{
+                  fontFamily: 'Inter-SemiBold',
+                  fontSize: 15,
+                  color: selectedGenres.length > 0 ? colors.accentFg : colors.textMuted,
+                }}>
+                  {selectedGenres.length > 0
+                    ? `Show Results · ${selectedGenres.length} genre${selectedGenres.length > 1 ? 's' : ''}`
+                    : 'Select genres above'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );

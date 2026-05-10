@@ -53,7 +53,11 @@ export function useToggleEpisode(series: Tracking.TrackingInput) {
       if (!existing) {
         await Tracking.addTracking(user!.uid, series);
       }
-      return Tracking.toggleEpisode(user!.uid, series.seriesId, seasonNum, episodeNum);
+      return Tracking.toggleEpisode(user!.uid, series.seriesId, seasonNum, episodeNum, {
+        status: series.status,
+        totalEpisodes: series.totalEpisodes,
+        totalSeasons: series.totalSeasons,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracking', user?.uid, series.seriesId] });
@@ -89,6 +93,11 @@ export function useMarkSeason(series: Tracking.TrackingInput) {
             seasonNum,
             episodeCount,
             seasonEpisodeCounts,
+            {
+              status: series.status,
+              totalEpisodes: series.totalEpisodes,
+              totalSeasons: series.totalSeasons,
+            },
           );
     },
     onSuccess: () => {
