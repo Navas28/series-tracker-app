@@ -48,6 +48,42 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574604558680:android:d62a606b6e6a994b1b252d",
+        "android_client_info": {
+          "package_name": "com.seriestracker.app.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9M2htrB01QqRcbNBMS3OJ_YY37i9qNr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "574604558680-m5pctum2frp6kpled4q6dna47l35emrk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.seriestracker.app"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
