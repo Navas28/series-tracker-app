@@ -18,8 +18,8 @@ export default {
       package: IS_DEV ? 'com.seriestracker.app.dev' : 'com.seriestracker.app',
       googleServicesFile: './google-services.json',
       adaptiveIcon: {
-        backgroundColor: '#ffff',
-        foregroundImage: './assets/images/android-icon-foreground.png',
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#041122',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -46,9 +46,9 @@ export default {
           image: './assets/images/splash-icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
-          backgroundColor: '#000000',
+          backgroundColor: '#041122',
           dark: {
-            backgroundColor: '#000000',
+            backgroundColor: '#041122',
           },
         },
       ],
