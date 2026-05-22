@@ -12,8 +12,6 @@ Binge helps TV enthusiasts take control of their watching habits. Search any ser
 
 ## Screenshots
 
-| | | |
-|---|---|---|
 <img width="1080" height="2319" alt="login" src="https://github.com/user-attachments/assets/e0342796-cec8-473d-b8d7-5bb1839eed44" />
 <img width="717" height="1549" alt="home" src="https://github.com/user-attachments/assets/3e4a33f5-a2f9-4338-b49c-59734e2b47e5" />
 <img width="717" height="1541" alt="popular" src="https://github.com/user-attachments/assets/f026c39a-940c-445b-a9f6-792993aaba9d" />
