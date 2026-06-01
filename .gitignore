@@ -45,4 +45,6 @@ app-example
 # project docs
 CLAUDE.md
 design.txt
+google-services.json
+GoogleService-Info.plist
 
