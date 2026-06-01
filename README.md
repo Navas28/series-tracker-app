@@ -1,50 +1,53 @@
-# Welcome to your Expo app 👋
+# Binge — Series Tracker App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> A personal series tracking app built with React Native & Expo. Powered by the TVDB API for rich, up-to-date TV show data.
 
-## Get started
+---
 
-1. Install dependencies
+## About
 
-   ```bash
-   npm install
-   ```
+Binge helps TV enthusiasts take control of their watching habits. Search any series, mark episodes as watched, build custom playlists, and see detailed watch statistics — all from your phone.
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## Screenshots
 
-In the output, you'll find options to open the app in a
+<img width="1080" height="2319" alt="login" src="https://github.com/user-attachments/assets/e0342796-cec8-473d-b8d7-5bb1839eed44" />
+<img width="717" height="1549" alt="home" src="https://github.com/user-attachments/assets/3e4a33f5-a2f9-4338-b49c-59734e2b47e5" />
+<img width="717" height="1541" alt="popular" src="https://github.com/user-attachments/assets/f026c39a-940c-445b-a9f6-792993aaba9d" />
+<img width="1080" height="2319" alt="playlist" src="https://github.com/user-attachments/assets/a85035a5-8a8a-44e4-bf80-dac1d2175617" />
+<img width="717" height="1541" alt="details" src="https://github.com/user-attachments/assets/5f6688a2-81c9-4a68-932e-771d9634bef6" />
+<img width="717" height="1537" alt="stats" src="https://github.com/user-attachments/assets/5b4e3391-b272-46e9-9b32-f2aff28fb005" />
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## Features
 
-When you're ready, run:
+- **Series Tracking** — Search and follow TV shows using real-time data from the TVDB API
+- **Episode Management** — Mark individual episodes as watched, track your progress per season
+- **Custom Playlists** — Organise shows into playlists (e.g. Currently Watching, On Hold, Completed)
+- **Watch Statistics** — View total watch hours, episode count, and per-show breakdowns
+- **Firebase Sync** — Data stored and synced securely with Firebase Firestore
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Tech Stack
 
-## Learn more
+| Technology | Purpose |
+|---|---|
+| React Native | Cross-platform mobile UI |
+| Expo | Build toolchain and device APIs |
+| Firebase (Firestore + Auth) | Backend, authentication, real-time data sync |
+| [TVDB API](https://www.thetvdb.com/) | TV series metadata — titles, posters, episode lists, air dates |
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## TVDB API
 
-## Join the community
+Series data (titles, posters, episode lists, air dates, descriptions) is fetched from the **TVDB API** — the largest community-driven TV database. An API key is required to run the project.
 
-Join our community of developers creating universal apps.
+Get your free API key at [thetvdb.com/api-information](https://www.thetvdb.com/)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
