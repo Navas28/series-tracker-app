@@ -46,4 +46,6 @@ app-example
 CLAUDE.md
 design.txt
 
-
+# Firebase Config
+google-services.json
+GoogleService-Info.plist
