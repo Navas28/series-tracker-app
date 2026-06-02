@@ -1,5 +1,5 @@
 import { Share } from 'react-native';
-import { getAllTracking, SeriesTracking } from './firestore/tracking';
+import type { GqlTrackedSeries } from './api/types';
 
 function isOngoing(status: string): boolean {
   return status === 'Returning Series' || status === 'In Production' || status === 'To Be Determined';
@@ -19,16 +19,16 @@ function formatWatchTime(totalMinutes: number): { full: string; hours: string } 
   };
 }
 
-function buildStats(series: SeriesTracking[]): string[] {
-  const total = series.length;
-  const ongoing = series.filter(t => isOngoing(t.status)).length;
-  const ended = series.filter(t => !isOngoing(t.status)).length;
-  const completed = series.filter(
-    t => t.totalEpisodes > 0 && Object.keys(t.watched).length >= t.totalEpisodes,
+function buildStats(tracking: GqlTrackedSeries[]): string[] {
+  const total = tracking.length;
+  const ongoing = tracking.filter(t => isOngoing(t.series.status ?? '')).length;
+  const ended = tracking.filter(t => !isOngoing(t.series.status ?? '')).length;
+  const completed = tracking.filter(
+    t => (t.series.totalEpisodes ?? 0) > 0 && t.watchedEpisodes.length >= (t.series.totalEpisodes ?? 0),
   ).length;
-  const episodesWatched = series.reduce((sum, t) => sum + Object.keys(t.watched).length, 0);
-  const totalMinutes = series.reduce(
-    (sum, t) => sum + Object.keys(t.watched).length * (t.averageRuntime ?? 0),
+  const episodesWatched = tracking.reduce((sum, t) => sum + t.watchedEpisodes.length, 0);
+  const totalMinutes = tracking.reduce(
+    (sum, t) => sum + t.watchedEpisodes.length * (t.series.averageRuntime ?? 0),
     0,
   );
   const watchTime = formatWatchTime(Math.round(totalMinutes));
@@ -46,19 +46,16 @@ function buildStats(series: SeriesTracking[]): string[] {
   ];
 }
 
-function buildSeasonSummary(watched: Record<string, number | true>): Record<string, number> {
+function buildSeasonSummary(tracking: GqlTrackedSeries): Record<string, number> {
   const summary: Record<string, number> = {};
-  for (const key of Object.keys(watched)) {
-    const match = key.match(/^S(\d+)E\d+$/);
-    if (match) {
-      const s = match[1];
-      summary[s] = (summary[s] ?? 0) + 1;
-    }
+  for (const ep of tracking.watchedEpisodes) {
+    const s = String(ep.season);
+    summary[s] = (summary[s] ?? 0) + 1;
   }
   return summary;
 }
 
-function formatTxt(series: SeriesTracking[]): string {
+function formatTxt(tracking: GqlTrackedSeries[]): string {
   const divider = '─'.repeat(39);
   const date = new Date().toISOString().split('T')[0];
 
@@ -66,19 +63,19 @@ function formatTxt(series: SeriesTracking[]): string {
     'BINGE — My Series Export',
     `Exported : ${date}`,
     '',
-    ...buildStats(series),
+    ...buildStats(tracking),
     '',
   ];
 
-  for (const t of series) {
-    const watchedCount = Object.keys(t.watched).length;
-    const seasonMap = buildSeasonSummary(t.watched);
-    const maxSeason = t.totalSeasons;
+  for (const t of tracking) {
+    const watchedCount = t.watchedEpisodes.length;
+    const seasonMap = buildSeasonSummary(t);
+    const maxSeason = t.series.totalSeasons ?? 0;
 
     lines.push(divider);
-    lines.push(t.name);
-    lines.push(`Status  : ${t.status}`);
-    lines.push(`Watched : ${watchedCount} / ${t.totalEpisodes} episodes`);
+    lines.push(t.series.name);
+    lines.push(`Status  : ${t.series.status ?? 'Unknown'}`);
+    lines.push(`Watched : ${watchedCount} / ${t.series.totalEpisodes ?? 0} episodes`);
 
     for (let s = 1; s <= maxSeason; s++) {
       const watched = seasonMap[String(s)] ?? 0;
@@ -90,10 +87,8 @@ function formatTxt(series: SeriesTracking[]): string {
   return lines.join('\n');
 }
 
-export async function exportTrackingData(userId: string): Promise<void> {
-  const trackingList = await getAllTracking(userId);
-  const sorted = trackingList.sort((a, b) => a.name.localeCompare(b.name));
-
+export async function exportTrackingData(tracking: GqlTrackedSeries[]): Promise<void> {
+  const sorted = [...tracking].sort((a, b) => a.series.name.localeCompare(b.series.name));
   const txt = formatTxt(sorted);
   const date = new Date().toISOString().split('T')[0];
 

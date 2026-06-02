@@ -34,7 +34,7 @@ export default function SeriesDetailScreen() {
 
   useEffect(() => {
     if (tracking && series) {
-      const watchedCount = Object.keys(tracking.watched).length;
+      const watchedCount = tracking.watchedEpisodes.length;
       const total = series.number_of_episodes;
       const isCurrentlyCompleted = total > 0 && watchedCount >= total && !isOngoing(series.status);
 

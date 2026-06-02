@@ -1,47 +1,84 @@
-import { useState, useEffect } from 'react';
-import {
-  onAuthStateChanged,
-  signInWithCredential,
-  GoogleAuthProvider,
-  signOut as firebaseSignOut,
-  FirebaseAuthTypes,
-} from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { auth } from '@/lib/firebase';
+import { useState, useEffect, useCallback } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { getToken, saveToken, deleteToken } from '@/lib/auth';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL!;
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+};
 
 export function useAuth() {
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+
+  const [, response, promptAsync] = Google.useAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      if (initializing) setInitializing(false);
-    });
-    return unsubscribe;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const init = async () => {
+      const token = await getToken();
+      if (token) {
+        try {
+          const res = await fetch(`${API_URL}/graphql`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ query: '{ me { id email name picture } }' }),
+          });
+          const json = await res.json();
+          if (json.data?.me) {
+            setUser(json.data.me);
+          } else {
+            await deleteToken();
+          }
+        } catch {
+          await deleteToken();
+        }
+      }
+      setInitializing(false);
+    };
+    init();
+  }, []);
 
-  const signInWithGoogle = async () => {
+  useEffect(() => {
+    if (response?.type === 'success' && response.authentication?.accessToken) {
+      exchangeToken(response.authentication.accessToken);
+    }
+  }, [response]);
+
+  const exchangeToken = async (accessToken: string) => {
     try {
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const { data } = await GoogleSignin.signIn();
-      if (!data?.idToken) throw new Error('No ID token found');
-      const credential = GoogleAuthProvider.credential(data.idToken);
-      return signInWithCredential(auth, credential);
+      const res = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken }),
+      });
+      const { token, user: authUser } = await res.json();
+      await saveToken(token);
+      setUser(authUser);
     } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      throw error;
+      console.error('Auth exchange error:', error);
     }
   };
 
-  const signOut = async () => {
-    try {
-      await GoogleSignin.signOut();
-      await firebaseSignOut(auth);
-    } catch (error) {
-      console.error('Sign-Out Error:', error);
-    }
-  };
+  const signInWithGoogle = useCallback(async () => {
+    await promptAsync();
+  }, [promptAsync]);
+
+  const signOut = useCallback(async () => {
+    await deleteToken();
+    setUser(null);
+  }, []);
 
   return { user, initializing, signInWithGoogle, signOut };
 }

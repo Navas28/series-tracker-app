@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ScrollView } from 'react-native';
 import { X, Plus, Check, Search } from 'lucide-react-native';
+import { TextInput } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { usePlaylists, useAddToPlaylist } from '@/hooks/usePlaylists';
 import CreatePlaylistModal from './CreatePlaylistModal';
-import type { PlaylistSeries } from '@/services/firestore/playlists';
-
 interface Props {
   visible: boolean;
   onClose: () => void;
-  series: PlaylistSeries;
+  series: { tvdbId: number; name: string; posterUrl: string | null };
 }
 
 export default function AddToPlaylistModal({ visible, onClose, series }: Props) {
@@ -26,7 +25,7 @@ export default function AddToPlaylistModal({ visible, onClose, series }: Props) 
 
   const handleAdd = (playlistId: string) => {
     addToPlaylist(
-      { playlistId, series },
+      { playlistId, tvdbId: series.tvdbId },
       { onSuccess: () => setAddedIds(prev => [...prev, playlistId]) },
     );
   };
@@ -89,7 +88,7 @@ export default function AddToPlaylistModal({ visible, onClose, series }: Props) 
               ) : (
                 filteredPlaylists.map(playlist => {
                   const alreadyIn =
-                    playlist.series.some(s => s.seriesId === series.seriesId) ||
+                    playlist.series.some(s => s.tvdbId === series.tvdbId) ||
                     addedIds.includes(playlist.id);
                   return (
                     <TouchableOpacity

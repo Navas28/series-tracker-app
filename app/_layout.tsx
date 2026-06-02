@@ -1,5 +1,6 @@
 import '../global.css';
 
+import { ApolloProvider } from '@apollo/client/react';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
@@ -22,7 +23,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { apolloClient } from '@/lib/apollo';
 import { useAuth } from '@/hooks/useAuth';
 import { ToastProvider } from '@/components/ui/Toast';
 import { View } from 'react-native';
@@ -36,17 +37,13 @@ const queryClient = new QueryClient({
   },
 });
 
-GoogleSignin.configure({
-  webClientId: '574604558680-otv70h7boa343mg808go16t365jff93l.apps.googleusercontent.com',
-});
-
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const { user, initializing } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -64,9 +61,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (initializing || !fontsLoaded) return;
-
     const inAuthGroup = segments[0] === 'login';
-
     if (!user && !inAuthGroup) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
@@ -83,19 +78,27 @@ export default function RootLayout() {
   if (!fontsLoaded || initializing) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={DarkTheme}>
-        <ToastProvider>
-          <View className="dark" style={{ flex: 1 }}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="series/view-all" options={{ headerShown: false }} />
-            </Stack>
-          </View>
-          <StatusBar style="light" />
-        </ToastProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ThemeProvider value={DarkTheme}>
+      <ToastProvider>
+        <View className="dark" style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="series/view-all" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+        <StatusBar style="light" />
+      </ToastProvider>
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ApolloProvider client={apolloClient}>
+      <QueryClientProvider client={queryClient}>
+        <RootLayoutNav />
+      </QueryClientProvider>
+    </ApolloProvider>
   );
 }

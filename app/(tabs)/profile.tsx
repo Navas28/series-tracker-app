@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart2, Bell, ChevronRight, LogOut, Download } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
+import { useAllTracking } from '@/hooks/useTracking';
 import { Colors } from '@/constants/theme';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { exportTrackingData } from '@/services/export';
@@ -12,15 +13,15 @@ const colors = Colors.dark;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { data: allTracking } = useAllTracking();
 
   const [signOutModal, setSignOutModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
-    if (!user) return;
     setIsExporting(true);
     try {
-      await exportTrackingData(user.uid);
+      await exportTrackingData(allTracking ?? []);
     } catch (error) {
       console.error('[Export] failed:', error);
       Alert.alert('Export Failed', 'Could not export your data. Please try again.');
@@ -43,31 +44,29 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Avatar + name */}
         <View className="items-center pt-10 pb-8">
           <View className="relative mb-5">
-            {user.photoURL ? (
+            {user.picture ? (
               <Image
-                source={{ uri: user.photoURL }}
+                source={{ uri: user.picture }}
                 className="w-28 h-28 rounded-full border-2 border-border"
               />
             ) : (
               <View className="w-28 h-28 rounded-full bg-surface-elevated border border-border items-center justify-center">
                 <Text className="font-display text-3xl text-text-sub">
-                  {(user.displayName ?? 'U')[0].toUpperCase()}
+                  {(user.name ?? 'U')[0].toUpperCase()}
                 </Text>
               </View>
             )}
             <View className="w-5 h-5 rounded-full bg-success border-2 border-background absolute bottom-0 right-1" />
           </View>
 
-          <Text className="font-heading text-xl text-text">{user.displayName ?? 'Series Fan'}</Text>
+          <Text className="font-heading text-xl text-text">{user.name ?? 'Series Fan'}</Text>
           <Text className="font-body text-sm text-text-sub mt-1">{user.email}</Text>
         </View>
 
         <View className="px-5" style={{ gap: 12 }}>
 
-          {/* Account */}
           <View>
             <Text className="font-body text-xs text-text-muted uppercase mb-2 ml-1" style={{ letterSpacing: 1 }}>
               Account
@@ -105,7 +104,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* Sign Out */}
           <View className="mt-2">
             <TouchableOpacity
               className="flex-row items-center justify-center rounded-xl border border-error py-4"

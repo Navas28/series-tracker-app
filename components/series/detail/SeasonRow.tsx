@@ -4,10 +4,9 @@ import { ChevronDown, ChevronUp, CheckCircle2, Circle, CheckCheck, Lock } from '
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeasonDetails } from '@/hooks/useSeries';
-import { countWatchedInSeason } from '@/services/firestore/tracking';
 import { formatEpisodeAirDate, isReleased } from '@/utils/date';
 import type { ShowSeason } from '@/services/api/types';
-import type { SeriesTracking } from '@/services/firestore/tracking';
+import type { GqlTrackedSeries } from '@/services/api/types';
 
 function formatRuntime(minutes: number): string {
   if (minutes <= 0) return '';
@@ -20,7 +19,7 @@ function formatRuntime(minutes: number): string {
 interface Props {
   season: ShowSeason;
   seriesId: number;
-  tracking: SeriesTracking | null;
+  tracking: GqlTrackedSeries | null;
   releasedEpisodeCount: number;
   averageRuntime?: number;
   onToggleEpisode: (seasonNum: number, episodeNum: number) => void;
@@ -40,7 +39,7 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
   );
 
   const watchedCount = useMemo(
-    () => (tracking ? countWatchedInSeason(tracking.watched, season.season_number) : 0),
+    () => tracking?.watchedEpisodes.filter((ep) => ep.season === season.season_number).length ?? 0,
     [tracking, season.season_number],
   );
   const total = season.episode_count;
@@ -62,8 +61,10 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
   const seasonWatchedMinutes = useMemo(() => {
     if (details?.episodes && tracking) {
       return details.episodes.reduce((sum, ep) => {
-        const key = `S${season.season_number}E${ep.episode_number}`;
-        return sum + (tracking.watched[key] ? (ep.runtime ?? 0) : 0);
+        const watched = tracking.watchedEpisodes.some(
+          (w) => w.season === season.season_number && w.episode === ep.episode_number,
+        );
+        return sum + (watched ? (ep.runtime ?? 0) : 0);
       }, 0);
     }
     return averageRuntime && watchedCount > 0 ? Math.round(averageRuntime * watchedCount) : 0;
@@ -80,7 +81,6 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
         activeOpacity={0.75}
       >
         <View className="flex-row items-center px-3.5 pt-3.5 pb-3" style={{ gap: 12 }}>
-          {/* Season badge */}
           <View
             className={`w-11 h-11 rounded-xl items-center justify-center ${
               allWatched
@@ -103,7 +103,6 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
             )}
           </View>
 
-          {/* Season info */}
           <View className="flex-1">
             <View className="flex-row items-center flex-wrap" style={{ gap: 6 }}>
               <Text className="font-heading-regular text-sm text-text" numberOfLines={1}>
@@ -128,7 +127,6 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
             </Text>
           </View>
 
-          {/* Right controls */}
           <View className="flex-row items-center" style={{ gap: 10 }}>
             {tracking && releasedEpisodeCount > 0 && (
               <View
@@ -202,8 +200,9 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
           )}
 
           {details?.episodes.map(ep => {
-            const key = `S${season.season_number}E${ep.episode_number}`;
-            const isWatched = !!tracking?.watched[key];
+            const isWatched = tracking?.watchedEpisodes.some(
+              (w) => w.season === season.season_number && w.episode === ep.episode_number,
+            ) ?? false;
             const episodeReleased = isReleased(ep.air_date);
             const upcomingLabel = !episodeReleased
               ? formatEpisodeAirDate(ep.air_date) ?? 'Upcoming'

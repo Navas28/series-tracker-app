@@ -4,10 +4,10 @@ import { ListMusic } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
-import type { Playlist } from '@/services/firestore/playlists';
+import type { GqlPlaylist } from '@/services/api/types';
 
 interface Props {
-  playlist: Playlist;
+  playlist: GqlPlaylist;
 }
 
 export default function PlaylistCard({ playlist }: Props) {

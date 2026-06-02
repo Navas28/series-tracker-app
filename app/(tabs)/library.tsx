@@ -8,7 +8,7 @@ import { useAllTracking } from "@/hooks/useTracking";
 import TrackedSeriesCard, { isOngoing } from "@/components/tracking/TrackedSeriesCard";
 import CreatePlaylistModal from "@/components/playlists/CreatePlaylistModal";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { SeriesTracking } from "@/services/firestore/tracking";
+import type { GqlTrackedSeries } from "@/services/api/types";
 
 const colors = Colors.dark;
 
@@ -21,13 +21,13 @@ type SectionHeader = {
 
 type CardRow = {
   type: 'row';
-  left: SeriesTracking;
-  right?: SeriesTracking;
+  left: GqlTrackedSeries;
+  right?: GqlTrackedSeries;
 };
 
 type ListItem = SectionHeader | CardRow;
 
-function buildListData(sections: { label: string; dotClass: string; data: SeriesTracking[] }[]): ListItem[] {
+function buildListData(sections: { label: string; dotClass: string; data: GqlTrackedSeries[] }[]): ListItem[] {
   const items: ListItem[] = [];
   for (const section of sections) {
     if (section.data.length === 0) continue;
@@ -37,6 +37,12 @@ function buildListData(sections: { label: string; dotClass: string; data: Series
     }
   }
   return items;
+}
+
+function sortByLastWatched(a: GqlTrackedSeries, b: GqlTrackedSeries): number {
+  const aTime = a.lastWatchedAt ? new Date(a.lastWatchedAt).getTime() : 0;
+  const bTime = b.lastWatchedAt ? new Date(b.lastWatchedAt).getTime() : 0;
+  return bTime - aTime;
 }
 
 export default function MySeriesScreen() {
@@ -52,15 +58,16 @@ export default function MySeriesScreen() {
   };
 
   const sections = useMemo(() => {
-    const toFinish = (allTracking ?? [])
-      .filter(t => !isOngoing(t.status) && (t.totalEpisodes === 0 || Object.keys(t.watched).length < t.totalEpisodes))
-      .sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
-    const ongoing = (allTracking ?? [])
-      .filter(t => isOngoing(t.status))
-      .sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
-    const completed = (allTracking ?? [])
-      .filter(t => !isOngoing(t.status) && t.totalEpisodes > 0 && Object.keys(t.watched).length >= t.totalEpisodes)
-      .sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+    const list = allTracking ?? [];
+    const toFinish = list
+      .filter(t => !isOngoing(t.series.status ?? '') && ((t.series.totalEpisodes ?? 0) === 0 || t.watchedEpisodes.length < (t.series.totalEpisodes ?? 0)))
+      .sort(sortByLastWatched);
+    const ongoing = list
+      .filter(t => isOngoing(t.series.status ?? ''))
+      .sort(sortByLastWatched);
+    const completed = list
+      .filter(t => !isOngoing(t.series.status ?? '') && (t.series.totalEpisodes ?? 0) > 0 && t.watchedEpisodes.length >= (t.series.totalEpisodes ?? 0))
+      .sort(sortByLastWatched);
     return [
       { label: 'To Finish', dotClass: 'bg-border', data: toFinish },
       { label: 'Ongoing', dotClass: 'bg-watched', data: ongoing },

@@ -1,5 +1,3 @@
-const IS_EAS = !!process.env.EAS_BUILD;
-
 /** @type {import('expo/config').ExpoConfig} */
 const config = {
   name: "Binge",
@@ -16,9 +14,6 @@ const config = {
   },
   android: {
     package: "com.seriestracker.app",
-    googleServicesFile: IS_EAS
-      ? process.env.GOOGLE_SERVICES_JSON
-      : "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#041122",
@@ -32,16 +27,10 @@ const config = {
   },
   plugins: [
     "expo-router",
-    "@react-native-firebase/app",
-    "@react-native-firebase/auth",
-    [
-      "expo-build-properties",
-      {
-        ios: {
-          useFrameworks: "static",
-        },
-      },
-    ],
+    "expo-font",
+    "expo-web-browser",
+    "expo-secure-store",
+    "expo-build-properties",
     [
       "expo-splash-screen",
       {

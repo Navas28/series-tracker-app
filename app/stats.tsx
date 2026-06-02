@@ -15,7 +15,7 @@ import { Colors } from '@/constants/theme';
 import { useAllTracking } from '@/hooks/useTracking';
 import { isOngoing } from '@/components/tracking/TrackedSeriesCard';
 import { Skeleton } from '@/components/ui/Skeleton';
-import type { SeriesTracking } from '@/services/firestore/tracking';
+import type { GqlTrackedSeries } from '@/services/api/types';
 
 const colors = Colors.dark;
 
@@ -39,15 +39,16 @@ function formatMonthYear(date: Date): string {
 }
 
 function getFilteredWatchedCount(
-  tracking: SeriesTracking,
+  tracking: GqlTrackedSeries,
   from: number,
   to: number,
   allTime: boolean,
 ): number {
-  if (allTime) return Object.keys(tracking.watched).length;
-  return Object.values(tracking.watched).filter(
-    ts => typeof ts === 'number' && ts >= from && ts <= to,
-  ).length;
+  if (allTime) return tracking.watchedEpisodes.length;
+  return tracking.watchedEpisodes.filter(ep => {
+    const ts = new Date(ep.watchedAt).getTime();
+    return ts >= from && ts <= to;
+  }).length;
 }
 
 function formatWatchTime(totalMinutes: number): { main: string; raw: string } {
@@ -201,14 +202,14 @@ export default function StatsScreen() {
   const collectionStats = useMemo(() => {
     if (!allTracking?.length) return null;
     const total = allTracking.length;
-    const ongoing = allTracking.filter(t => isOngoing(t.status)).length;
-    const ended = allTracking.filter(t => !isOngoing(t.status)).length;
+    const ongoing = allTracking.filter(t => isOngoing(t.series.status ?? '')).length;
+    const ended = allTracking.filter(t => !isOngoing(t.series.status ?? '')).length;
     const completed = allTracking.filter(
-      t => t.totalEpisodes > 0 && Object.keys(t.watched).length >= t.totalEpisodes,
+      t => (t.series.totalEpisodes ?? 0) > 0 && t.watchedEpisodes.length >= (t.series.totalEpisodes ?? 0),
     ).length;
     const completionRates = allTracking
-      .filter(t => t.totalEpisodes > 0)
-      .map(t => Object.keys(t.watched).length / t.totalEpisodes);
+      .filter(t => (t.series.totalEpisodes ?? 0) > 0)
+      .map(t => t.watchedEpisodes.length / (t.series.totalEpisodes ?? 1));
     const avgCompletion = completionRates.length
       ? Math.round((completionRates.reduce((s, r) => s + r, 0) / completionRates.length) * 100)
       : 0;
@@ -221,11 +222,11 @@ export default function StatsScreen() {
       (sum, t) => sum + getFilteredWatchedCount(t, from, to, isAllTime),
       0,
     );
-    const seriesWithRuntime = allTracking.filter(t => (t.averageRuntime ?? 0) > 0);
+    const seriesWithRuntime = allTracking.filter(t => (t.series.averageRuntime ?? 0) > 0);
     const runtimeMissing = episodesWatched > 0 && seriesWithRuntime.length === 0;
     const totalMinutes = allTracking.reduce((sum, t) => {
       const count = getFilteredWatchedCount(t, from, to, isAllTime);
-      return sum + count * (t.averageRuntime ?? 0);
+      return sum + count * (t.series.averageRuntime ?? 0);
     }, 0);
     const watchTime = formatWatchTime(Math.round(totalMinutes));
     return { episodesWatched, watchTime, runtimeMissing };
@@ -245,7 +246,6 @@ export default function StatsScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView className="flex-1 bg-background">
-        {/* Header */}
         <View className="flex-row items-center px-5 pt-3 pb-5" style={{ gap: 12 }}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -266,7 +266,6 @@ export default function StatsScreen() {
         >
           <View className="px-5" style={{ gap: 20 }}>
 
-            {/* Collection */}
             <View style={{ gap: 10 }}>
               <Text className="font-body text-xs text-text-muted uppercase ml-1" style={{ letterSpacing: 1 }}>
                 Your Collection
@@ -292,15 +291,8 @@ export default function StatsScreen() {
                     <StatCard label="Ended" value={String(collectionStats.ended)} />
                   </View>
                   <View className="flex-row" style={{ gap: 10 }}>
-                    <StatCard
-                      label="Completed"
-                      value={String(collectionStats.completed)}
-                      accent
-                    />
-                    <StatCard
-                      label="Avg Completion"
-                      value={`${collectionStats.avgCompletion}%`}
-                    />
+                    <StatCard label="Completed" value={String(collectionStats.completed)} accent />
+                    <StatCard label="Avg Completion" value={`${collectionStats.avgCompletion}%`} />
                   </View>
                 </View>
               ) : (
@@ -310,13 +302,11 @@ export default function StatsScreen() {
               )}
             </View>
 
-            {/* Activity */}
             <View style={{ gap: 10 }}>
               <Text className="font-body text-xs text-text-muted uppercase ml-1" style={{ letterSpacing: 1 }}>
                 Watch Activity
               </Text>
 
-              {/* Filter chips */}
               <View className="flex-row" style={{ gap: 8 }}>
                 {(['month', 'custom', 'all'] as FilterMode[]).map(mode => {
                   const label = mode === 'month' ? 'This Month' : mode === 'custom' ? 'Custom' : 'All Time';
@@ -338,7 +328,6 @@ export default function StatsScreen() {
                 })}
               </View>
 
-              {/* Custom date range pickers */}
               {filterMode === 'custom' && (
                 <View className="bg-surface rounded-xl border border-border p-4" style={{ gap: 12 }}>
                   <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -367,7 +356,6 @@ export default function StatsScreen() {
                 </View>
               )}
 
-              {/* Activity stat cards */}
               {isLoading ? (
                 <View className="flex-row" style={{ gap: 10 }}>
                   <Skeleton width="100%" height={100} borderRadius={12} style={{ flex: 1 }} />
@@ -375,10 +363,7 @@ export default function StatsScreen() {
                 </View>
               ) : (
                 <View className="flex-row" style={{ gap: 10 }}>
-                  <StatCard
-                    label="Episodes Watched"
-                    value={String(activityStats.episodesWatched)}
-                  />
+                  <StatCard label="Episodes Watched" value={String(activityStats.episodesWatched)} />
                   <View className="flex-1 bg-surface rounded-xl border border-border p-4">
                     <Text className="font-body text-xs text-text-muted mb-2">Watch Time</Text>
                     {activityStats.runtimeMissing ? (

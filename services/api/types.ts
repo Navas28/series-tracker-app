@@ -79,6 +79,46 @@ export interface ShowSeasonDetails {
   episodes: ShowEpisode[];
 }
 
+export type GqlSeries = {
+  id: string;
+  tvdbId: number;
+  name: string;
+  status: string | null;
+  totalSeasons: number | null;
+  totalEpisodes: number | null;
+  averageRuntime: number | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  overview: string | null;
+};
+
+export type GqlWatchedEpisode = {
+  season: number;
+  episode: number;
+  watchedAt: string;
+};
+
+export type GqlTrackedSeries = {
+  series: GqlSeries;
+  addedAt: string;
+  lastWatchedAt: string | null;
+  watchedEpisodes: GqlWatchedEpisode[];
+};
+
+export type GqlPlaylistSeries = {
+  id: string;
+  tvdbId: number;
+  name: string;
+  posterUrl: string | null;
+};
+
+export type GqlPlaylist = {
+  id: string;
+  name: string;
+  createdAt: string;
+  series: GqlPlaylistSeries[];
+};
+
 export const SHOW_GENRES: ShowGenre[] = [
   { id: 'action', name: 'Action' },
   { id: 'adventure', name: 'Adventure' },

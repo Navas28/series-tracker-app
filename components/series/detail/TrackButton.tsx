@@ -28,7 +28,7 @@ export default function TrackButton({ series }: Props) {
       removeTracking(series.id);
     } else {
       addTracking({
-        seriesId: series.id,
+        tvdbId: series.id,
         name: series.name,
         posterUrl: series.poster_path,
         backdropUrl: series.backdrop_path,
@@ -80,7 +80,7 @@ export default function TrackButton({ series }: Props) {
       <AddToPlaylistModal
         visible={showPlaylists}
         onClose={() => setShowPlaylists(false)}
-        series={{ seriesId: series.id, name: series.name, posterUrl: series.poster_path }}
+        series={{ tvdbId: series.id, name: series.name, posterUrl: series.poster_path }}
       />
     </>
   );

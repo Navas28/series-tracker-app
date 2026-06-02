@@ -11,49 +11,28 @@ interface Props {
 
 export default function EpisodeTracker({ series }: Props) {
   const { data: tracking } = useSeriesTracking(series.id);
-
-  const trackingInput = {
-    seriesId: series.id,
-    name: series.name,
-    posterUrl: series.poster_path,
-    backdropUrl: series.backdrop_path,
-    status: series.status,
-    totalSeasons: series.number_of_seasons,
-    totalEpisodes: series.number_of_episodes,
-    averageRuntime: series.averageRuntime ?? 0,
-  };
-
-  const { mutate: toggleEpisode } = useToggleEpisode(trackingInput);
-  const { mutate: markSeason } = useMarkSeason(trackingInput);
+  const { mutate: toggleEpisode } = useToggleEpisode(series.id);
+  const { mutate: markSeason } = useMarkSeason(series.id);
 
   const visibleSeasons = useMemo(
     () => series.seasons.filter(s => s.season_number > 0),
     [series.seasons],
   );
 
-  const seasonEpisodeCounts = useMemo(() => {
-    const counts: Record<number, number> = {};
-    visibleSeasons.forEach(s => { counts[s.season_number] = s.episode_count; });
-    return counts;
-  }, [visibleSeasons]);
-
   const getReleasedEpisodeCount = useCallback((season: ShowSeason): number => {
     if (!isReleased(season.air_date)) return 0;
     const nextEp = series.next_episode_to_air;
     const lastEp = series.last_episode_to_air;
-    // Next episode is in this season → episodes before it have aired
     if (nextEp?.season_number === season.season_number) {
       return Math.max(0, nextEp.episode_number - 1);
     }
-    // Last aired episode is in this season (next not announced yet)
     if (lastEp?.season_number === season.season_number) {
       return lastEp.episode_number;
     }
-    // Season is fully in the past
     return season.episode_count;
   }, [series.next_episode_to_air, series.last_episode_to_air]);
 
-  const totalWatched = tracking ? Object.keys(tracking.watched).length : 0;
+  const totalWatched = tracking?.watchedEpisodes.length ?? 0;
   const totalEps = series.number_of_episodes;
   const overallProgress = totalEps > 0 ? totalWatched / totalEps : 0;
 
@@ -76,8 +55,8 @@ export default function EpisodeTracker({ series }: Props) {
 
   const handleMarkSeason = useCallback(
     (sNum: number, epCount: number, unwatch: boolean) =>
-      markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch, seasonEpisodeCounts }),
-    [markSeason, seasonEpisodeCounts],
+      markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch }),
+    [markSeason],
   );
 
   if (visibleSeasons.length === 0) return null;

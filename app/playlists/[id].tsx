@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, Trash2, Plus, X, Check, Search } from 'lucide-react-native';
+import { ArrowLeft, Trash2, Plus, X, Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/theme';
@@ -25,7 +25,7 @@ import {
 import { useAllTracking } from '@/hooks/useTracking';
 import { Skeleton } from '@/components/ui/Skeleton';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import type { Playlist, PlaylistSeries } from '@/services/firestore/playlists';
+import type { GqlPlaylistSeries } from '@/services/api/types';
 
 const colors = Colors.dark;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -53,22 +53,22 @@ export default function PlaylistDetailScreen() {
   const handleDelete = () => setDeleteModalOpen(true);
   const confirmDelete = () => deletePlaylist(id, { onSuccess: () => router.back() });
 
-  const handleRemove = (seriesId: number, name: string) => {
-    setRemoveTarget({ id: seriesId, name });
+  const handleRemove = (tvdbId: number, name: string) => {
+    setRemoveTarget({ id: tvdbId, name });
     setRemoveModalOpen(true);
   };
   const confirmRemove = () => {
-    if (removeTarget) removeFromPlaylist({ playlistId: id, seriesId: removeTarget.id });
+    if (removeTarget) removeFromPlaylist({ playlistId: id, tvdbId: removeTarget.id });
   };
 
-  const handleAdd = (series: PlaylistSeries) => {
-    addToPlaylist({ playlistId: id, series });
+  const handleAdd = (tvdbId: number) => {
+    addToPlaylist({ playlistId: id, tvdbId });
   };
 
-  const alreadyInPlaylist = new Set(playlist?.series.map(s => s.seriesId) ?? []);
+  const alreadyInPlaylist = new Set(playlist?.series.map(s => s.tvdbId) ?? []);
 
-  const filteredSeries = (allTracking ?? []).filter(t => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) && !alreadyInPlaylist.has(t.seriesId)
+  const filteredSeries = (allTracking ?? []).filter(t =>
+    t.series.name.toLowerCase().includes(searchQuery.toLowerCase()) && !alreadyInPlaylist.has(t.series.tvdbId)
   );
 
   return (
@@ -76,7 +76,6 @@ export default function PlaylistDetailScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
 
-        {/* Header */}
         <View className="flex-row items-center px-5 py-3" style={{ gap: 12 }}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
             <ArrowLeft size={22} color={colors.text} strokeWidth={1.75} />
@@ -98,7 +97,6 @@ export default function PlaylistDetailScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
         {isLoading && (
           <View className="flex-row px-5 mt-2" style={{ gap: COLUMN_GAP }}>
             {[0, 1].map(i => (
@@ -128,7 +126,7 @@ export default function PlaylistDetailScreen() {
               <FlashList
                 data={playlist.series}
                 numColumns={2}
-                keyExtractor={s => String(s.seriesId)}
+                keyExtractor={s => String(s.tvdbId)}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: H_PADDING, paddingTop: 8, paddingBottom: 40 }}
                 ItemSeparatorComponent={() => <View style={{ height: COLUMN_GAP }} />}
@@ -136,7 +134,7 @@ export default function PlaylistDetailScreen() {
                   <View style={{ flex: 1, paddingLeft: index % 2 === 1 ? COLUMN_GAP : 0 }}>
                     <TouchableOpacity
                       activeOpacity={0.85}
-                      onPress={() => router.push(`/series/${s.seriesId}`)}
+                      onPress={() => router.push(`/series/${s.tvdbId}`)}
                     >
                       <View
                         className="rounded-xl overflow-hidden bg-surface-elevated"
@@ -146,7 +144,7 @@ export default function PlaylistDetailScreen() {
                           <Image source={{ uri: s.posterUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
                         )}
                         <TouchableOpacity
-                          onPress={() => handleRemove(s.seriesId, s.name)}
+                          onPress={() => handleRemove(s.tvdbId, s.name)}
                           style={{
                             position: 'absolute',
                             top: 6,
@@ -229,43 +227,39 @@ export default function PlaylistDetailScreen() {
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
                 {filteredSeries.length === 0 ? (
                   <Text style={{ fontFamily: 'Inter-Regular', fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: 24 }}>
-                    {allTracking?.length === 0 ? "Start tracking series first to add them to playlists." : "No series found."}
+                    {(allTracking?.length ?? 0) === 0 ? "Start tracking series first to add them to playlists." : "No series found."}
                   </Text>
                 ) : (
-                  filteredSeries.map(t => {
-                    return (
-                      <TouchableOpacity
-                        key={t.seriesId}
-                        onPress={() => handleAdd({ seriesId: t.seriesId, name: t.name, posterUrl: t.posterUrl })}
-                        activeOpacity={0.75}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 12,
-                          padding: 10,
-                          borderRadius: 12,
-                          backgroundColor: colors.surfaceElevated,
-                          borderWidth: 1,
-                          borderColor: colors.border,
-                        }}
-                      >
-                        <View style={{ width: 40, height: 56, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.border }}>
-                          {t.posterUrl && <Image source={{ uri: t.posterUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
-                        </View>
-                        <Text style={{ flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text }} numberOfLines={1}>
-                          {t.name}
-                        </Text>
-                        <Plus size={18} color={colors.textSub} strokeWidth={2} />
-                      </TouchableOpacity>
-                    );
-                  })
+                  filteredSeries.map(t => (
+                    <TouchableOpacity
+                      key={t.series.tvdbId}
+                      onPress={() => handleAdd(t.series.tvdbId)}
+                      activeOpacity={0.75}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 10,
+                        borderRadius: 12,
+                        backgroundColor: colors.surfaceElevated,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                      }}
+                    >
+                      <View style={{ width: 40, height: 56, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.border }}>
+                        {t.series.posterUrl && <Image source={{ uri: t.series.posterUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />}
+                      </View>
+                      <Text style={{ flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text }} numberOfLines={1}>
+                        {t.series.name}
+                      </Text>
+                      <Plus size={18} color={colors.textSub} strokeWidth={2} />
+                    </TouchableOpacity>
+                  ))
                 )}
               </ScrollView>
             </View>
           </View>
         </Modal>
-
-
 
         <ConfirmModal
           visible={deleteModalOpen}
