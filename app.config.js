@@ -22,19 +22,6 @@ const config = {
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    intentFilters: [
-      {
-        action: "VIEW",
-        data: [
-          {
-            scheme: IS_DEV
-              ? process.env.GOOGLE_ANDROID_DEV_REVERSE_CLIENT_ID
-              : "com.googleusercontent.apps.861444202243-ov6cqptjk47c5tgife7puq2l69i0mrik",
-          },
-        ],
-        category: ["BROWSABLE", "DEFAULT"],
-      },
-    ],
   },
   web: {
     output: "static",

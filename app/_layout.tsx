@@ -24,7 +24,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { apolloClient } from '@/lib/apollo';
-import { useAuth } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { View } from 'react-native';
 
@@ -61,7 +61,8 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (initializing || !fontsLoaded) return;
-    const inAuthGroup = segments[0] === 'login';
+    const authScreens = ['login', 'verify-otp', 'forgot-password', 'reset-password'];
+    const inAuthGroup = authScreens.includes(segments[0] as string);
     if (!user && !inAuthGroup) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
@@ -84,6 +85,9 @@ function RootLayoutNav() {
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="verify-otp" options={{ headerShown: false }} />
+            <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+            <Stack.Screen name="reset-password" options={{ headerShown: false }} />
             <Stack.Screen name="series/view-all" options={{ headerShown: false }} />
           </Stack>
         </View>
@@ -97,7 +101,9 @@ export default function RootLayout() {
   return (
     <ApolloProvider client={apolloClient}>
       <QueryClientProvider client={queryClient}>
-        <RootLayoutNav />
+        <AuthProvider>
+          <RootLayoutNav />
+        </AuthProvider>
       </QueryClientProvider>
     </ApolloProvider>
   );

@@ -8,9 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "development",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "861444202243-jfl6jkvkjj3rei3aaldbqfc75bv4lu6b.apps.googleusercontent.com",
-        "GOOGLE_ANDROID_DEV_REVERSE_CLIENT_ID": "com.googleusercontent.apps.861444202243-jfl6jkvkjj3rei3aaldbqfc75bv4lu6b"
+        "APP_VARIANT": "development"
       }
     },
     "preview": {
