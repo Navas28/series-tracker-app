@@ -1,53 +1,94 @@
 import { gql } from '@apollo/client';
 
+const SERIES_FIELDS = `
+  id
+  tvdbId
+  name
+  status
+  totalSeasons
+  totalEpisodes
+  averageRuntime
+  posterUrl
+  backdropUrl
+  overview
+`;
+
+const TRACKED_SERIES_FIELDS = `
+  series { ${SERIES_FIELDS} }
+  addedAt
+  lastWatchedAt
+  watchedEpisodes { season episode watchedAt }
+`;
+
 export const TRACKED_SERIES_QUERY = gql`
   query TrackedSeries {
     trackedSeries {
-      series {
-        id
-        tvdbId
-        name
-        status
-        totalSeasons
-        totalEpisodes
-        averageRuntime
-        posterUrl
-        backdropUrl
-        overview
+      ${TRACKED_SERIES_FIELDS}
+    }
+  }
+`;
+
+export const SERIES_DETAIL_QUERY = gql`
+  query SeriesDetail($tvdbId: Int!) {
+    seriesDetail(tvdbId: $tvdbId) {
+      id
+      tvdbId
+      name
+      slug
+      overview
+      tagline
+      status
+      firstAired
+      lastAired
+      nextAired
+      averageRuntime
+      totalSeasons
+      totalEpisodes
+      score
+      originalLanguage
+      originalCountry
+      contentRating
+      posterUrl
+      backdropUrl
+      lastRefreshedAt
+      genres { id tvdbId name slug }
+      networks { id tvdbNetworkId name slug country imageUrl isOriginal }
+      cast {
+        id tvdbCharacterId characterName characterImageUrl
+        personName personImageUrl peopleType sortOrder isFeatured
       }
-      addedAt
-      lastWatchedAt
-      watchedEpisodes {
-        season
-        episode
-        watchedAt
+      artworks { id tvdbId type url thumbnailUrl language score width height }
+      remoteIds { sourceName externalId }
+      seasons {
+        id tvdbSeasonId seasonNumber name imageUrl year seasonType
+        episodes {
+          id tvdbEpisodeId episodeNumber seasonNumber
+          name overview aired runtime imageUrl
+        }
+      }
+      nextEpisode {
+        id tvdbEpisodeId episodeNumber seasonNumber name overview aired runtime imageUrl
+      }
+      lastEpisode {
+        id tvdbEpisodeId episodeNumber seasonNumber name overview aired runtime imageUrl
       }
     }
   }
 `;
 
 export const TRACK_SERIES_MUTATION = gql`
-  mutation TrackSeries($input: TrackSeriesInput!) {
-    trackSeries(input: $input) {
-      series {
-        id
-        tvdbId
-        name
-        status
-        totalSeasons
-        totalEpisodes
-        averageRuntime
-        posterUrl
-        backdropUrl
-        overview
-      }
-      addedAt
-      lastWatchedAt
-      watchedEpisodes {
-        season
-        episode
-        watchedAt
-      }
+  mutation TrackSeries($tvdbId: Int!) {
+    trackSeries(tvdbId: $tvdbId) {
+      ${TRACKED_SERIES_FIELDS}
+    }
+  }
+`;
+
+export const REFRESH_SERIES_MUTATION = gql`
+  mutation RefreshSeries($tvdbId: Int!) {
+    refreshSeries(tvdbId: $tvdbId) {
+      tvdbId
+      lastRefreshedAt
     }
   }
 `;

@@ -25,6 +25,13 @@ export async function getPopularSeries(page = 0): Promise<TVDBSeriesBaseRecord[]
   }
 }
 
+export async function getRecentSeries(page = 0): Promise<TVDBSeriesBaseRecord[]> {
+  const res = await client.get<ApiResponse<TVDBSeriesBaseRecord[]>>('/series/filter', {
+    params: { sort: 'firstAired', sortType: 'desc', country: 'usa', lang: 'eng', page },
+  });
+  return res.data.data ?? [];
+}
+
 export async function getSeriesExtended(id: number): Promise<TVDBSeriesExtendedRecord> {
   const res = await client.get<ApiResponse<TVDBSeriesExtendedRecord>>(
     `/series/${id}/extended`,
@@ -33,12 +40,53 @@ export async function getSeriesExtended(id: number): Promise<TVDBSeriesExtendedR
   return res.data.data;
 }
 
-export async function getSeasonExtended(seasonId: number): Promise<TVDBSeasonExtended> {
-  const res = await client.get<ApiResponse<TVDBSeasonExtended>>(
-    `/seasons/${seasonId}/extended`,
-    { params: { meta: 'translations' } },
-  );
-  return res.data.data;
+async function fetchEnglishEpisodesMap(
+  seriesId: number,
+): Promise<Map<number, { name: string | null; overview: string | null }>> {
+  const map = new Map<number, { name: string | null; overview: string | null }>();
+  try {
+    let page = 0;
+    while (true) {
+      const res = await client.get<ApiResponse<{ episodes: TVDBEpisode[] | null }>>(
+        `/series/${seriesId}/episodes/official/eng`,
+        { params: { page } },
+      );
+      const episodes = res.data.data?.episodes ?? [];
+      for (const ep of episodes) {
+        map.set(ep.id, { name: ep.name, overview: ep.overview });
+      }
+      if (episodes.length < 100) break;
+      page++;
+    }
+  } catch {
+    // fall back to native language gracefully
+  }
+  return map;
+}
+
+export async function getSeasonExtended(
+  seasonId: number,
+  seriesId?: number,
+): Promise<TVDBSeasonExtended> {
+  const [seasonRes, engMap] = await Promise.all([
+    client.get<ApiResponse<TVDBSeasonExtended>>(
+      `/seasons/${seasonId}/extended`,
+      { params: { meta: 'translations' } },
+    ),
+    seriesId ? fetchEnglishEpisodesMap(seriesId) : Promise.resolve(new Map<number, { name: string | null; overview: string | null }>()),
+  ]);
+
+  const season = seasonRes.data.data;
+
+  if (engMap.size > 0) {
+    season.episodes = (season.episodes ?? []).map(ep => {
+      const eng = engMap.get(ep.id);
+      if (!eng) return ep;
+      return { ...ep, name: eng.name ?? ep.name, overview: eng.overview ?? ep.overview };
+    });
+  }
+
+  return season;
 }
 
 export async function getSeriesEpisodeCounts(

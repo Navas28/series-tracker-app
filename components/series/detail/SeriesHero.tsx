@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Star, Tv2 } from 'lucide-react-native';
+import { ArrowLeft, Users, Tv2, ExternalLink } from 'lucide-react-native';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
@@ -11,15 +11,35 @@ import type { ShowDetails } from '@/services/api/types';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKDROP_HEIGHT = Math.round(SCREEN_WIDTH * 0.58);
 
+const LANG_NAMES: Record<string, string> = {
+  kor: 'Korean', jpn: 'Japanese', cmn: 'Chinese', zho: 'Chinese',
+  hin: 'Hindi', ara: 'Arabic', spa: 'Spanish', por: 'Portuguese',
+  fra: 'French', deu: 'German', ita: 'Italian', tha: 'Thai',
+  tur: 'Turkish', rus: 'Russian', swe: 'Swedish', nld: 'Dutch',
+  pol: 'Polish', dan: 'Danish', nor: 'Norwegian', fin: 'Finnish',
+};
+
 interface Props {
   series: ShowDetails;
 }
 
+function formatPopularity(score: number): string {
+  if (score >= 1_000_000_000) return `${(score / 1_000_000_000).toFixed(1)}B`;
+  if (score >= 1_000_000) return `${(score / 1_000_000).toFixed(1)}M`;
+  if (score >= 1_000) return `${(score / 1_000).toFixed(1)}K`;
+  return String(score);
+}
+
 export default function SeriesHero({ series }: Props) {
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? 'dark'];
 
   const isEnded = series.status === 'Ended' || series.status === 'Canceled';
+  const network = series.networks[0] ?? null;
+  const imdbUrl = series.imdbId ? `https://www.imdb.com/title/${series.imdbId}/` : null;
+  const langLabel = series.originalLanguage && series.originalLanguage !== 'eng'
+    ? (LANG_NAMES[series.originalLanguage] ?? series.originalLanguage.toUpperCase())
+    : null;
 
   return (
     <View>
@@ -55,47 +75,82 @@ export default function SeriesHero({ series }: Props) {
                 <Tv2 size={24} color={colors.textMuted} strokeWidth={1.5} />
               </View>
             )}
-            {series.vote_average > 0 && (
-              <View
-                className="absolute bottom-1 right-1 bg-black/80 rounded-md px-1.5 py-0.5 flex-row items-center"
-                style={{ gap: 3 }}
-              >
-                <Star size={10} color={colors.rating} fill={colors.rating} />
-                <Text className="font-mono-bold text-[10px] text-white">
-                  {series.vote_average.toFixed(1)}
-                </Text>
-              </View>
-            )}
           </View>
 
           <View className="flex-1 pt-2">
-            <Text className="font-heading text-xl text-text" numberOfLines={2}>
-              {series.name}
-            </Text>
+            {series.clearLogoUrl ? (
+              <Image
+                source={{ uri: series.clearLogoUrl }}
+                style={{ height: 44, width: '100%' }}
+                contentFit="contain"
+                contentPosition="left"
+              />
+            ) : (
+              <Text className="font-heading text-xl text-text" numberOfLines={2}>
+                {series.name}
+              </Text>
+            )}
             <Text className="font-body text-sm text-text-sub mt-0.5">
               {series.first_air_date?.slice(0, 4)}
               {series.number_of_seasons > 0 &&
                 ` · ${series.number_of_seasons} season${series.number_of_seasons > 1 ? 's' : ''}`}
             </Text>
-            <View className="flex-row items-center mt-2 flex-wrap" style={{ gap: 8 }}>
+
+            <View className="flex-row items-center mt-2 flex-wrap" style={{ gap: 6 }}>
               <View className={`rounded px-2 py-0.5 ${isEnded ? 'bg-surface-elevated' : 'bg-watched-subtle'}`}>
                 <Text className={`font-body-medium text-[10px] ${isEnded ? 'text-text-muted' : 'text-watched'}`}>
                   {series.status}
                 </Text>
               </View>
+              {series.contentRating ? (
+                <View className="rounded px-2 py-0.5 bg-surface-elevated border border-border">
+                  <Text className="font-mono text-[10px] text-text-muted">{series.contentRating}</Text>
+                </View>
+              ) : null}
+              {series.vote_average > 0 ? (
+                <View className="flex-row items-center rounded px-2 py-0.5 bg-surface-elevated border border-border" style={{ gap: 4 }}>
+                  <Users size={9} color={colors.textMuted} strokeWidth={1.75} />
+                  <Text className="font-mono text-[10px] text-text-muted">{formatPopularity(series.vote_average)}</Text>
+                </View>
+              ) : null}
+              {langLabel ? (
+                <View className="rounded px-2 py-0.5 bg-surface-elevated border border-border">
+                  <Text className="font-mono text-[10px] text-text-muted">{langLabel}</Text>
+                </View>
+              ) : null}
             </View>
+
+            {network ? (
+              <View className="flex-row items-center mt-2" style={{ gap: 5 }}>
+                <Tv2 size={11} color={colors.textMuted} strokeWidth={1.5} />
+                <Text className="font-body text-xs text-text-muted">{network.name}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        {series.homepage && (
-          <View className="flex-row items-center mt-4">
-            <TouchableOpacity
-              onPress={() => Linking.openURL(series.homepage!)}
-              activeOpacity={0.7}
-              className="border border-border rounded-full px-4 py-2"
-            >
-              <Text className="font-body-medium text-sm text-text">Website</Text>
-            </TouchableOpacity>
+        {(imdbUrl || series.homepage) && (
+          <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
+            {imdbUrl ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(imdbUrl)}
+                activeOpacity={0.7}
+                className="flex-row items-center border border-border rounded-full px-4 py-2"
+                style={{ gap: 5 }}
+              >
+                <ExternalLink size={12} color={colors.textSub} strokeWidth={1.75} />
+                <Text className="font-body-medium text-sm text-text">IMDB</Text>
+              </TouchableOpacity>
+            ) : null}
+            {series.homepage ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(series.homepage!)}
+                activeOpacity={0.7}
+                className="border border-border rounded-full px-4 py-2"
+              >
+                <Text className="font-body-medium text-sm text-text">Website</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         )}
 
@@ -109,8 +164,12 @@ export default function SeriesHero({ series }: Props) {
           </View>
         )}
 
+        {series.tagline ? (
+          <Text className="font-body text-xs text-text-muted italic mt-3">"{series.tagline}"</Text>
+        ) : null}
+
         {series.overview ? (
-          <Text className="font-body text-sm text-text-sub leading-5 mt-3">{series.overview}</Text>
+          <Text className="font-body text-sm text-text-sub leading-5 mt-2">{series.overview}</Text>
         ) : null}
       </View>
     </View>

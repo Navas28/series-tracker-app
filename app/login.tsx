@@ -13,6 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { useRouter } from 'expo-router';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
+import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/Toast';
 
@@ -22,20 +25,31 @@ export default function LoginScreen() {
   const router = useRouter();
   const { signIn, signUp } = useAuth();
   const toast = useToast();
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme ?? 'dark'];
 
   const [mode, setMode] = useState<Mode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email.trim() || !password.trim()) {
-      toast.error('Please fill in all fields');
-      return;
-    }
     if (mode === 'register' && !name.trim()) {
       toast.error('Please enter your name');
+      return;
+    }
+    if (!email.trim()) {
+      toast.error('Please enter your email');
+      return;
+    }
+    if (!password) {
+      toast.error('Please enter your password');
+      return;
+    }
+    if (mode === 'register' && password.length < 8) {
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
@@ -68,6 +82,7 @@ export default function LoginScreen() {
     setName('');
     setEmail('');
     setPassword('');
+    setShowPassword(false);
   };
 
   return (
@@ -77,140 +92,157 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 28,
+            paddingVertical: 40,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="flex-1 items-center justify-center px-5 py-8">
-            <View className="w-full max-w-md">
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                className="items-center mb-10"
-              >
-                <View className="mb-4 h-20 items-center justify-center">
-                  <Image
-                    source={require('@/assets/images/logo.png')}
-                    className="w-64 h-64"
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text className="font-display text-4xl tracking-tighter text-text">
-                  BIN<Text className="text-accent">GE</Text>
-                </Text>
-                <Text className="font-mono text-xs text-watched uppercase mt-2 tracking-widest">
-                  Series Database & Tracker
-                </Text>
-              </MotiView>
+          {/* Branding */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            className="items-center mb-10"
+          >
+            <View className="mb-4 h-20 items-center justify-center">
+              <Image
+                source={require('@/assets/images/logo.png')}
+                className="w-64 h-64"
+                resizeMode="contain"
+              />
+            </View>
+            <Text className="font-display text-4xl tracking-tighter text-text">
+              BIN<Text className="text-accent">GE</Text>
+            </Text>
+            <Text className="font-mono text-xs text-watched uppercase mt-2 tracking-widest">
+              Series Database & Tracker
+            </Text>
+          </MotiView>
 
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: 'timing', duration: 700, delay: 150 }}
-                className="bg-surface-elevated/60 border border-border-subtle rounded-[24px] p-8"
-              >
-                {/* Tab switcher */}
-                <View className="flex-row bg-surface rounded-xl p-1 mb-8">
-                  {(['login', 'register'] as Mode[]).map((m) => (
-                    <TouchableOpacity
-                      key={m}
-                      className={`flex-1 py-2.5 rounded-lg items-center ${mode === m ? 'bg-accent' : ''}`}
-                      onPress={() => switchMode(m)}
-                      activeOpacity={0.8}
-                    >
-                      <Text
-                        className={`font-body-semibold text-sm ${mode === m ? 'text-accent-fg' : 'text-text-muted'}`}
-                      >
-                        {m === 'login' ? 'Sign In' : 'Register'}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Name field — register only */}
-                {mode === 'register' && (
-                  <View className="mb-4">
-                    <Text className="font-body-medium text-xs text-text-sub mb-2 uppercase tracking-wider">
-                      Name
-                    </Text>
-                    <TextInput
-                      className="bg-surface border border-border rounded-xl px-4 py-3.5 font-body text-sm text-text"
-                      placeholder="Your name"
-                      placeholderTextColor="#455f82"
-                      value={name}
-                      onChangeText={setName}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                    />
-                  </View>
-                )}
-
-                {/* Email field */}
-                <View className="mb-4">
-                  <Text className="font-body-medium text-xs text-text-sub mb-2 uppercase tracking-wider">
-                    Email
-                  </Text>
-                  <TextInput
-                    className="bg-surface border border-border rounded-xl px-4 py-3.5 font-body text-sm text-text"
-                    placeholder="you@example.com"
-                    placeholderTextColor="#455f82"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-
-                {/* Password field */}
-                <View className="mb-6">
-                  <Text className="font-body-medium text-xs text-text-sub mb-2 uppercase tracking-wider">
-                    Password
-                  </Text>
-                  <TextInput
-                    className="bg-surface border border-border rounded-xl px-4 py-3.5 font-body text-sm text-text"
-                    placeholder="Min. 8 characters"
-                    placeholderTextColor="#455f82"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-
-                {/* Submit button */}
+          {/* Form */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 700, delay: 150 }}
+          >
+            {/* Tab switcher */}
+            <View className="flex-row bg-surface rounded-xl p-1 mb-8">
+              {(['login', 'register'] as Mode[]).map((m) => (
                 <TouchableOpacity
-                  className="bg-accent rounded-xl py-4 items-center"
-                  onPress={handleSubmit}
+                  key={m}
+                  className={`flex-1 py-2.5 rounded-lg items-center ${mode === m ? 'bg-accent' : ''}`}
+                  onPress={() => switchMode(m)}
                   activeOpacity={0.8}
-                  disabled={loading}
                 >
-                  {loading ? (
-                    <ActivityIndicator size="small" color="#010d23" />
+                  <Text className={`font-body-semibold text-sm ${mode === m ? 'text-accent-fg' : 'text-text-muted'}`}>
+                    {m === 'login' ? 'Sign In' : 'Register'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Name field — register only */}
+            {mode === 'register' && (
+              <View className="mb-5">
+                <Text className="font-body-medium text-xs text-text-muted uppercase tracking-wider mb-2">
+                  Name
+                </Text>
+                <TextInput
+                  className="bg-surface border border-border rounded-xl px-4 py-4 font-body text-sm text-text"
+                  placeholder="Your name"
+                  placeholderTextColor={colors.textMuted}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                />
+              </View>
+            )}
+
+            {/* Email field */}
+            <View className="mb-5">
+              <Text className="font-body-medium text-xs text-text-muted uppercase tracking-wider mb-2">
+                Email
+              </Text>
+              <TextInput
+                className="bg-surface border border-border rounded-xl px-4 py-4 font-body text-sm text-text"
+                placeholder="you@example.com"
+                placeholderTextColor={colors.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+              />
+            </View>
+
+            {/* Password field with eye icon */}
+            <View className="mb-8">
+              <Text className="font-body-medium text-xs text-text-muted uppercase tracking-wider mb-2">
+                Password
+              </Text>
+              <View className="bg-surface border border-border rounded-xl flex-row items-center px-4">
+                <TextInput
+                  className="flex-1 py-4 font-body text-sm text-text"
+                  placeholder={mode === 'register' ? 'Min. 8 characters' : 'Your password'}
+                  placeholderTextColor={colors.textMuted}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSubmit}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(s => !s)}
+                  hitSlop={10}
+                  activeOpacity={0.6}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} color={colors.textMuted} strokeWidth={1.75} />
                   ) : (
-                    <Text className="font-body-semibold text-base text-accent-fg">
-                      {mode === 'login' ? 'Sign In' : 'Create Account'}
-                    </Text>
+                    <Eye size={18} color={colors.textMuted} strokeWidth={1.75} />
                   )}
                 </TouchableOpacity>
-
-                {/* Forgot password */}
-                {mode === 'login' && (
-                  <TouchableOpacity
-                    className="items-center mt-5"
-                    onPress={() => router.push('/forgot-password')}
-                    activeOpacity={0.7}
-                  >
-                    <Text className="font-body text-sm text-text-muted">
-                      Forgot your password?
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </MotiView>
+              </View>
             </View>
-          </View>
+
+            {/* Submit button */}
+            <TouchableOpacity
+              className="bg-accent rounded-xl py-4 items-center"
+              onPress={handleSubmit}
+              activeOpacity={0.8}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={colors.accentFg} />
+              ) : (
+                <Text className="font-body-semibold text-base text-accent-fg">
+                  {mode === 'login' ? 'Sign In' : 'Create Account'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Forgot password */}
+            {mode === 'login' && (
+              <TouchableOpacity
+                className="items-center mt-5 py-1"
+                onPress={() => router.push('/forgot-password')}
+                activeOpacity={0.7}
+              >
+                <Text className="font-body text-sm text-text-muted">
+                  Forgot your password?
+                </Text>
+              </TouchableOpacity>
+            )}
+          </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

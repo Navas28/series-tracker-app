@@ -1,6 +1,7 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { ChevronDown, ChevronUp, CheckCircle2, Circle, CheckCheck, Lock } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { ChevronDown, ChevronUp, CheckCircle2, Circle, CheckCheck, Lock, Film } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { Colors } from '@/constants/theme';
 import { useSeasonDetails } from '@/hooks/useSeries';
@@ -30,13 +31,26 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
   const [expanded, setExpanded] = useState(false);
+  const [expandedEps, setExpandedEps] = useState<Set<number>>(new Set());
 
-  const { data: details, isLoading: loadingEps } = useSeasonDetails(
+  const toggleEpExpanded = useCallback((epId: number) => {
+    setExpandedEps(prev => {
+      const next = new Set(prev);
+      next.has(epId) ? next.delete(epId) : next.add(epId);
+      return next;
+    });
+  }, []);
+
+  const hasPreloadedEpisodes = (season.episodes?.length ?? 0) > 0;
+  const { data: tvdbDetails, isLoading: loadingEps } = useSeasonDetails(
     seriesId,
     season.id,
     season.season_number,
-    { enabled: expanded },
+    { enabled: expanded && !hasPreloadedEpisodes },
   );
+  const details = hasPreloadedEpisodes
+    ? { episodes: season.episodes!, season_number: season.season_number, id: season.id, name: season.name, air_date: season.air_date, poster_path: season.poster_path, vote_average: 0 }
+    : tvdbDetails;
 
   const watchedCount = useMemo(
     () => tracking?.watchedEpisodes.filter((ep) => ep.season === season.season_number).length ?? 0,
@@ -76,28 +90,18 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
         allWatched ? 'border border-accent/30' : 'border border-border'
       }`}
     >
-      <TouchableOpacity
-        onPress={() => setExpanded(e => !e)}
-        activeOpacity={0.75}
-      >
+      {/* Season header */}
+      <TouchableOpacity onPress={() => setExpanded(e => !e)} activeOpacity={0.75}>
         <View className="flex-row items-center px-3.5 pt-3.5 pb-3" style={{ gap: 12 }}>
           <View
             className={`w-11 h-11 rounded-xl items-center justify-center ${
-              allWatched
-                ? 'bg-accent'
-                : hasPartialProgress
-                ? 'bg-accent-subtle'
-                : 'bg-surface-elevated'
+              allWatched ? 'bg-accent' : hasPartialProgress ? 'bg-accent-subtle' : 'bg-surface-elevated'
             }`}
           >
             {allWatched ? (
               <CheckCheck size={18} color={colors.background} strokeWidth={2.5} />
             ) : (
-              <Text
-                className={`font-mono-bold text-sm ${
-                  hasPartialProgress ? 'text-accent' : 'text-text-muted'
-                }`}
-              >
+              <Text className={`font-mono-bold text-sm ${hasPartialProgress ? 'text-accent' : 'text-text-muted'}`}>
                 {season.season_number}
               </Text>
             )}
@@ -131,20 +135,12 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
             {tracking && releasedEpisodeCount > 0 && (
               <View
                 className={`rounded-full px-2.5 py-1 ${
-                  allWatched
-                    ? 'bg-accent'
-                    : hasPartialProgress
-                    ? 'bg-accent-subtle'
-                    : 'bg-surface-elevated'
+                  allWatched ? 'bg-accent' : hasPartialProgress ? 'bg-accent-subtle' : 'bg-surface-elevated'
                 }`}
               >
                 <Text
                   className={`font-mono text-xs ${
-                    allWatched
-                      ? 'text-background'
-                      : hasPartialProgress
-                      ? 'text-accent'
-                      : 'text-text-muted'
+                    allWatched ? 'text-background' : hasPartialProgress ? 'text-accent' : 'text-text-muted'
                   }`}
                 >
                   {watchedCount}/{releasedEpisodeCount}
@@ -156,19 +152,13 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
             )}
 
             {seasonReleased && releasedEpisodeCount >= total && watchedCount < total && (
-              <TouchableOpacity
-                onPress={() => onMarkSeason(season.season_number, releasedEpisodeCount, false)}
-                hitSlop={12}
-              >
+              <TouchableOpacity onPress={() => onMarkSeason(season.season_number, releasedEpisodeCount, false)} hitSlop={12}>
                 <CheckCheck size={18} color={colors.textMuted} strokeWidth={1.75} />
               </TouchableOpacity>
             )}
 
             {allWatched && (
-              <TouchableOpacity
-                onPress={() => onMarkSeason(season.season_number, releasedEpisodeCount, true)}
-                hitSlop={12}
-              >
+              <TouchableOpacity onPress={() => onMarkSeason(season.season_number, releasedEpisodeCount, true)} hitSlop={12}>
                 <CheckCheck size={18} color={colors.accent} strokeWidth={2} />
               </TouchableOpacity>
             )}
@@ -183,14 +173,12 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
 
         {tracking && total > 0 && watchedCount > 0 && !allWatched && (
           <View className="h-0.5 mx-3.5 mb-3 rounded-full bg-surface-elevated overflow-hidden">
-            <View
-              className="h-full bg-accent rounded-full"
-              style={{ width: `${Math.round(progress * 100)}%` }}
-            />
+            <View className="h-full bg-accent rounded-full" style={{ width: `${Math.round(progress * 100)}%` }} />
           </View>
         )}
       </TouchableOpacity>
 
+      {/* Episode list */}
       {expanded && (
         <View className="border-t border-border-subtle">
           {loadingEps && (
@@ -204,65 +192,98 @@ function SeasonRow({ season, seriesId, tracking, releasedEpisodeCount, averageRu
               (w) => w.season === season.season_number && w.episode === ep.episode_number,
             ) ?? false;
             const episodeReleased = isReleased(ep.air_date);
-            const upcomingLabel = !episodeReleased
-              ? formatEpisodeAirDate(ep.air_date) ?? 'Upcoming'
-              : null;
+            const upcomingLabel = !episodeReleased ? formatEpisodeAirDate(ep.air_date) ?? 'Upcoming' : null;
+            const isEpExpanded = expandedEps.has(ep.id);
+            const hasOverview = !!ep.overview?.trim();
 
             return (
               <View
                 key={ep.id}
-                className={`flex-row items-center px-4 py-3.5 border-b border-border-subtle ${
-                  isWatched ? 'bg-watched-subtle' : ''
-                }`}
+                className={`border-b border-border-subtle ${isWatched ? 'bg-watched-subtle' : ''}`}
                 style={{ opacity: episodeReleased ? 1 : 0.45 }}
               >
-                <Text
-                  className={`font-mono text-xs w-8 ${
-                    isWatched ? 'text-success' : 'text-text-muted'
-                  }`}
+                {/* Compact row — tappable to expand overview */}
+                <TouchableOpacity
+                  onPress={() => hasOverview && toggleEpExpanded(ep.id)}
+                  activeOpacity={hasOverview ? 0.7 : 1}
+                  disabled={!hasOverview}
                 >
-                  {String(ep.episode_number).padStart(2, '0')}
-                </Text>
+                  <View className="flex-row items-center px-3 py-2.5" style={{ gap: 10 }}>
+                    {/* Thumbnail */}
+                    <View className="rounded-sm overflow-hidden bg-surface-elevated" style={{ width: 80, height: 45 }}>
+                      {ep.still_path ? (
+                        <Image source={{ uri: ep.still_path }} style={{ flex: 1 }} contentFit="cover" />
+                      ) : (
+                        <View className="flex-1 items-center justify-center">
+                          <Film size={16} color={colors.textMuted} strokeWidth={1.5} />
+                        </View>
+                      )}
+                      <View className="absolute bottom-0.5 left-1">
+                        <Text className="font-mono text-[9px] text-white/70">
+                          {String(ep.episode_number).padStart(2, '0')}
+                        </Text>
+                      </View>
+                    </View>
 
-                <View className="flex-1 mx-3">
-                  <Text
-                    className={`font-body-medium text-xs ${
-                      isWatched ? 'text-text-sub' : 'text-text'
-                    }`}
-                    numberOfLines={1}
-                  >
-                    {ep.name}
-                  </Text>
-                  <View className="flex-row items-center mt-0.5" style={{ gap: 6 }}>
-                    {ep.runtime ? (
-                      <Text className="font-mono text-[10px] text-text-muted">
-                        {formatRuntime(ep.runtime)}
+                    {/* Title + meta */}
+                    <View className="flex-1">
+                      <Text
+                        className={`font-body-medium text-xs leading-4 ${isWatched ? 'text-text-sub' : 'text-text'}`}
+                        numberOfLines={2}
+                      >
+                        {ep.name}
                       </Text>
-                    ) : null}
-                    {upcomingLabel ? (
-                      <Text className="font-body text-[10px] text-accent">
-                        {upcomingLabel}
+                      <View className="flex-row items-center mt-0.5" style={{ gap: 6 }}>
+                        {ep.runtime ? (
+                          <Text className="font-mono text-[10px] text-text-muted">{formatRuntime(ep.runtime)}</Text>
+                        ) : null}
+                        {upcomingLabel ? (
+                          <Text className="font-body text-[10px] text-accent">{upcomingLabel}</Text>
+                        ) : null}
+                        {hasOverview && (
+                          <ChevronDown
+                            size={10}
+                            color={colors.textMuted}
+                            style={{ transform: [{ rotate: isEpExpanded ? '180deg' : '0deg' }] }}
+                          />
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Watch toggle — separate touchable */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (!episodeReleased) return;
+                        onToggleEpisode(season.season_number, ep.episode_number);
+                      }}
+                      hitSlop={12}
+                      disabled={!episodeReleased}
+                    >
+                      {!episodeReleased ? (
+                        <Lock size={15} color={colors.border} strokeWidth={1.75} />
+                      ) : isWatched ? (
+                        <CheckCircle2 size={21} color={colors.success} strokeWidth={1.75} />
+                      ) : (
+                        <Circle size={21} color={colors.textMuted} strokeWidth={1.5} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Expanded overview */}
+                {isEpExpanded && hasOverview && (
+                  <View className="px-3 pb-3 pt-0" style={{ marginTop: -4 }}>
+                    <View className="h-px bg-border-subtle mb-2.5" />
+                    <Text className="font-body text-xs text-text-sub leading-5">
+                      {ep.overview}
+                    </Text>
+                    {ep.air_date ? (
+                      <Text className="font-body text-[10px] text-text-muted mt-1.5">
+                        {new Date(ep.air_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </Text>
                     ) : null}
                   </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    if (!episodeReleased) return;
-                    onToggleEpisode(season.season_number, ep.episode_number);
-                  }}
-                  hitSlop={12}
-                  disabled={!episodeReleased}
-                >
-                  {!episodeReleased ? (
-                    <Lock size={15} color={colors.border} strokeWidth={1.75} />
-                  ) : isWatched ? (
-                    <CheckCircle2 size={21} color={colors.success} strokeWidth={1.75} />
-                  ) : (
-                    <Circle size={21} color={colors.textMuted} strokeWidth={1.5} />
-                  )}
-                </TouchableOpacity>
+                )}
               </View>
             );
           })}

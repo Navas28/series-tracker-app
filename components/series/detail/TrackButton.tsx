@@ -27,16 +27,7 @@ export default function TrackButton({ series }: Props) {
     if (isTracked) {
       removeTracking(series.id);
     } else {
-      addTracking({
-        tvdbId: series.id,
-        name: series.name,
-        posterUrl: series.poster_path,
-        backdropUrl: series.backdrop_path,
-        status: series.status,
-        totalSeasons: series.number_of_seasons,
-        totalEpisodes: series.number_of_episodes,
-        averageRuntime: series.averageRuntime ?? 0,
-      });
+      addTracking(series.id);
     }
   };
 

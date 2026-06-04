@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function isOngoing(status: string): boolean {
-  return status === 'Returning Series' || status === 'In Production' || status === 'To Be Determined';
+  return status === 'Continuing' || status === 'Upcoming';
 }
 
 function TrackedSeriesCard({ tracking }: Props) {
@@ -20,17 +20,19 @@ function TrackedSeriesCard({ tracking }: Props) {
   const ongoing = isOngoing(series.status ?? '');
   const isFullyWatched = total > 0 && watchedCount >= total;
 
-  let bottomLineColorClass = 'bg-border';
+  let fillColorClass = 'bg-border';
   if (ongoing) {
-    bottomLineColorClass = 'bg-watched';
+    fillColorClass = 'bg-watched';
   } else if (isFullyWatched) {
-    bottomLineColorClass = 'bg-accent';
+    fillColorClass = 'bg-accent';
   }
+
+  const fillWidth: `${number}%` = `${Math.min(Math.round(progress * 100), 100)}%`;
 
   return (
     <TouchableOpacity
       onPress={() => router.push({ pathname: '/series/[id]', params: { id: series.tvdbId } })}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       <View
         className="rounded-xl overflow-hidden relative"
@@ -39,8 +41,13 @@ function TrackedSeriesCard({ tracking }: Props) {
         {series.posterUrl ? (
           <Image source={{ uri: series.posterUrl }} style={{ flex: 1 }} contentFit="cover" />
         ) : null}
-        <View className={`absolute bottom-0 left-0 right-0 h-1.5 ${bottomLineColorClass}`} />
+
+        {/* Progress bar: dark track + colored fill */}
+        <View className="absolute bottom-0 left-0 right-0 h-1 bg-surface-elevated">
+          <View className={`h-full ${fillColorClass}`} style={{ width: fillWidth }} />
+        </View>
       </View>
+
       <Text
         className="font-body-medium text-xs text-text mt-2 text-center"
         numberOfLines={2}

@@ -9,6 +9,7 @@ import SeriesHero from '@/components/series/detail/SeriesHero';
 import TrackButton from '@/components/series/detail/TrackButton';
 import EpisodeTracker from '@/components/series/detail/EpisodeTracker';
 import SeriesCastRow from '@/components/series/detail/SeriesCastRow';
+import SeriesCrewSection from '@/components/series/detail/SeriesCrewSection';
 import CompletionMilestone from '@/components/series/detail/CompletionMilestone';
 import SeriesRow from '@/components/series/SeriesRow';
 import { useState, useEffect, useRef } from 'react';
@@ -91,6 +92,7 @@ export default function SeriesDetailScreen() {
           <TrackButton series={series} />
           <EpisodeTracker series={series} />
           <SeriesCastRow cast={series.cast} />
+          <SeriesCrewSection crew={series.crew} />
           {series.related.length > 0 && (
             <SeriesRow title="More Like This" items={series.related} />
           )}

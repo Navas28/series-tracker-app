@@ -100,6 +100,9 @@ export interface TVDBSeriesExtendedRecord extends TVDBSeriesBaseRecord {
   genres: TVDBGenre[];
   networks: TVDBNetwork[];
   originalNetwork: TVDBNetwork | null;
+  originalCountry: string | null;
+  originalLanguage: string | null;
+  contentRatings: { name: string; country: string }[] | null;
   remoteIds: TVDBRemoteId[];
   seasons: TVDBSeasonBase[];
   nextAired: string | null;

@@ -106,7 +106,7 @@ export default function TrendingBanner({ items, isLoading }: Props) {
   return (
     <View className="mb-7">
       <View className="flex-row items-center justify-between px-5 mb-3">
-        <Text className="font-heading text-base text-text">Trending This Week</Text>
+        <Text className="font-heading text-base text-text">New & Recent</Text>
         <Text className="font-mono text-xs text-text-muted">
           {activeIndex + 1} / {topItems.length}
         </Text>

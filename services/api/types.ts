@@ -25,6 +25,13 @@ export interface ShowCastMember {
   roles: { character: string; episode_count: number }[];
 }
 
+export interface ShowCrewMember {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  role: string;
+}
+
 export interface ShowSeason {
   id: number;
   name: string;
@@ -33,6 +40,7 @@ export interface ShowSeason {
   air_date: string | null;
   poster_path: string | null;
   vote_average: number;
+  episodes?: ShowEpisode[];
 }
 
 export interface ShowEpisode {
@@ -63,10 +71,15 @@ export interface ShowDetails extends ShowListItem {
   networks: ShowNetwork[];
   seasons: ShowSeason[];
   cast: ShowCastMember[];
+  crew: ShowCrewMember[];
   next_episode_to_air: ShowEpisode | null;
   last_episode_to_air: ShowEpisode | null;
   related: ShowListItem[];
   homepage: string | null;
+  contentRating: string | null;
+  clearLogoUrl: string | null;
+  originalLanguage: string | null;
+  originalCountry: string | null;
 }
 
 export interface ShowSeasonDetails {
@@ -78,6 +91,8 @@ export interface ShowSeasonDetails {
   vote_average: number;
   episodes: ShowEpisode[];
 }
+
+// ─── GraphQL types (from backend) ────────────────────────────────────────────
 
 export type GqlSeries = {
   id: string;
@@ -117,6 +132,108 @@ export type GqlPlaylist = {
   name: string;
   createdAt: string;
   series: GqlPlaylistSeries[];
+};
+
+// ─── Full series detail types (from seriesDetail query) ──────────────────────
+
+export type GqlEpisodeDetail = {
+  id: string;
+  tvdbEpisodeId: number;
+  episodeNumber: number;
+  seasonNumber: number;
+  name: string | null;
+  overview: string | null;
+  aired: string | null;
+  runtime: number | null;
+  imageUrl: string | null;
+};
+
+export type GqlSeasonDetail = {
+  id: string;
+  tvdbSeasonId: number;
+  seasonNumber: number;
+  name: string | null;
+  imageUrl: string | null;
+  year: string | null;
+  seasonType: string;
+  episodes: GqlEpisodeDetail[];
+};
+
+export type GqlCastMember = {
+  id: string;
+  tvdbCharacterId: number;
+  characterName: string | null;
+  characterImageUrl: string | null;
+  personName: string;
+  personImageUrl: string | null;
+  peopleType: string;
+  sortOrder: number;
+  isFeatured: boolean;
+};
+
+export type GqlArtwork = {
+  id: string;
+  tvdbId: number;
+  type: number;
+  url: string;
+  thumbnailUrl: string | null;
+  language: string | null;
+  score: number | null;
+  width: number | null;
+  height: number | null;
+};
+
+export type GqlNetwork = {
+  id: string;
+  tvdbNetworkId: number;
+  name: string;
+  slug: string | null;
+  country: string | null;
+  imageUrl: string | null;
+  isOriginal: boolean;
+};
+
+export type GqlGenre = {
+  id: string;
+  tvdbId: number;
+  name: string;
+  slug: string;
+};
+
+export type GqlRemoteId = {
+  sourceName: string;
+  externalId: string;
+};
+
+export type GqlSeriesDetail = {
+  id: string;
+  tvdbId: number;
+  name: string;
+  slug: string | null;
+  overview: string | null;
+  tagline: string | null;
+  status: string | null;
+  firstAired: string | null;
+  lastAired: string | null;
+  nextAired: string | null;
+  averageRuntime: number | null;
+  totalSeasons: number | null;
+  totalEpisodes: number | null;
+  score: number | null;
+  originalLanguage: string | null;
+  originalCountry: string | null;
+  contentRating: string | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  lastRefreshedAt: string | null;
+  genres: GqlGenre[];
+  networks: GqlNetwork[];
+  cast: GqlCastMember[];
+  artworks: GqlArtwork[];
+  remoteIds: GqlRemoteId[];
+  seasons: GqlSeasonDetail[];
+  nextEpisode: GqlEpisodeDetail | null;
+  lastEpisode: GqlEpisodeDetail | null;
 };
 
 export const SHOW_GENRES: ShowGenre[] = [

@@ -41,11 +41,12 @@ function mapStatus(name: string | undefined): string {
 }
 
 export function tvdbBaseToListItem(s: TVDBSeriesBaseRecord): ShowListItem {
+  const engAlias = s.aliases?.find(a => a.language === 'eng')?.name;
   return {
     id: s.id,
     traktId: null,
     imdbId: null,
-    name: s.name,
+    name: engAlias ?? s.name,
     overview: '',
     poster_path: s.image,
     backdrop_path: null,
@@ -59,6 +60,7 @@ export function tvdbSearchToListItem(s: TVDBSearchResult): ShowListItem {
   const tvdbId = parseInt(s.tvdb_id, 10);
   if (isNaN(tvdbId) || !s.name) return null as unknown as ShowListItem;
 
+  const engName = engTranslation(s.translations?.nameTranslations ?? null);
   const engOverview = engTranslation(
     s.translations?.overviewTranslations ?? null,
   );
@@ -67,8 +69,8 @@ export function tvdbSearchToListItem(s: TVDBSearchResult): ShowListItem {
     id: tvdbId,
     traktId: null,
     imdbId: null,
-    name: s.name,
-    overview: s.overview ?? engOverview?.overview ?? '',
+    name: engName?.name ?? s.name,
+    overview: engOverview?.overview ?? s.overview ?? '',
     poster_path: s.image_url ?? s.poster ?? s.thumbnail ?? null,
     backdrop_path: null,
     first_air_date: s.first_air_time ?? (s.year ? `${s.year}-01-01` : null),
@@ -90,10 +92,11 @@ export function tvdbExtendedToDetails(
   const imdbId =
     s.remoteIds?.find(r => r.sourceName === 'IMDB')?.id ?? null;
 
+  const engName = engTranslation(s.translations?.nameTranslations ?? null);
   const engOverview = engTranslation(
     s.translations?.overviewTranslations ?? null,
   );
-  const overview = s.overview ?? engOverview?.overview ?? '';
+  const overview = engOverview?.overview ?? s.overview ?? '';
   const tagline = engOverview?.tagline ?? '';
 
   const officialSeasons: ShowSeason[] = (s.seasons ?? [])
@@ -124,19 +127,36 @@ export function tvdbExtendedToDetails(
       roles: [{ character: c.name ?? '', episode_count: 0 }],
     }));
 
+  const crew = (s.characters ?? [])
+    .filter(c => c.peopleType !== 'Actor')
+    .sort((a, b) => a.sort - b.sort)
+    .slice(0, 30)
+    .map(c => ({
+      id: c.peopleId,
+      name: c.personName,
+      profile_path: c.personImgURL ?? c.image ?? null,
+      role: c.peopleType,
+    }));
+
+  const clearLogoUrl = artworkByType(s.artworks, 7);
   const network = s.originalNetwork ?? s.networks?.[0] ?? null;
+
+  const contentRating =
+    s.contentRatings?.find(r => r.country === 'usa')?.name ??
+    s.contentRatings?.[0]?.name ??
+    null;
 
   return {
     id: s.id,
     traktId: null,
     imdbId,
-    name: s.name,
+    name: engName?.name ?? s.name,
     overview,
     poster_path: poster,
     backdrop_path: backdrop,
     first_air_date: s.year ? `${s.year}-01-01` : null,
     genres: (s.genres ?? []).map(g => ({ id: String(g.id), name: g.name })),
-    vote_average: 0,
+    vote_average: s.score ?? 0,
     tagline,
     status: mapStatus(s.status?.name),
     number_of_seasons: officialSeasons.length,
@@ -145,6 +165,11 @@ export function tvdbExtendedToDetails(
     networks: network ? [{ id: network.id, name: network.name, logo_path: null }] : [],
     seasons: officialSeasons,
     cast,
+    crew,
+    contentRating,
+    clearLogoUrl: clearLogoUrl ?? null,
+    originalLanguage: s.originalLanguage ?? null,
+    originalCountry: s.originalCountry ?? null,
     next_episode_to_air: s.nextAired
       ? {
           id: 0,

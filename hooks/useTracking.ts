@@ -10,18 +10,6 @@ import {
 } from '@/services/api/tracking';
 import type { GqlTrackedSeries } from '@/services/api/types';
 
-export type TrackSeriesInput = {
-  tvdbId: number;
-  name: string;
-  status?: string | null;
-  totalSeasons?: number | null;
-  totalEpisodes?: number | null;
-  averageRuntime?: number | null;
-  posterUrl?: string | null;
-  backdropUrl?: string | null;
-  overview?: string | null;
-};
-
 export function useAllTracking() {
   const { data, loading, error, refetch } = useQuery<{ trackedSeries: GqlTrackedSeries[] }>(TRACKED_SERIES_QUERY);
   return {
@@ -43,7 +31,7 @@ export function useAddTracking() {
     refetchQueries: [{ query: TRACKED_SERIES_QUERY }],
   });
   return {
-    mutate: (input: TrackSeriesInput) => mutate({ variables: { input } }),
+    mutate: (tvdbId: number) => mutate({ variables: { tvdbId } }),
     isPending: loading,
   };
 }

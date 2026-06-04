@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { View, Text } from 'react-native';
-import { useSeriesTracking, useToggleEpisode, useMarkSeason } from '@/hooks/useTracking';
+import { useSeriesTracking, useToggleEpisode, useMarkSeason, useAddTracking } from '@/hooks/useTracking';
 import SeasonRow from './SeasonRow';
 import type { ShowDetails, ShowSeason } from '@/services/api/types';
 import { isReleased } from '@/utils/date';
@@ -13,6 +13,7 @@ export default function EpisodeTracker({ series }: Props) {
   const { data: tracking } = useSeriesTracking(series.id);
   const { mutate: toggleEpisode } = useToggleEpisode(series.id);
   const { mutate: markSeason } = useMarkSeason(series.id);
+  const { mutate: addTracking } = useAddTracking();
 
   const visibleSeasons = useMemo(
     () => series.seasons.filter(s => s.season_number > 0),
@@ -49,14 +50,38 @@ export default function EpisodeTracker({ series }: Props) {
   }
 
   const handleToggleEpisode = useCallback(
-    (sNum: number, epNum: number) => toggleEpisode({ seasonNum: sNum, episodeNum: epNum }),
-    [toggleEpisode],
+    async (sNum: number, epNum: number) => {
+      if (!tracking) await addTracking(series.id);
+      toggleEpisode({ seasonNum: sNum, episodeNum: epNum });
+    },
+    [toggleEpisode, tracking, addTracking, series.id],
   );
 
   const handleMarkSeason = useCallback(
-    (sNum: number, epCount: number, unwatch: boolean) =>
-      markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch }),
-    [markSeason],
+    async (sNum: number, epCount: number, unwatch: boolean) => {
+      if (!tracking && !unwatch) await addTracking(series.id);
+
+      if (!unwatch) {
+        // Auto-mark all prior seasons that aren't fully watched
+        const toMark = visibleSeasons.filter(s => {
+          if (s.season_number >= sNum) return false;
+          const relCount = getReleasedEpisodeCount(s);
+          if (relCount === 0) return false;
+          const watched = tracking?.watchedEpisodes.filter(ep => ep.season === s.season_number).length ?? 0;
+          return watched < relCount;
+        });
+        if (toMark.length > 0) {
+          await Promise.all(
+            toMark.map(s =>
+              markSeason({ seasonNum: s.season_number, episodeCount: getReleasedEpisodeCount(s), unwatch: false }),
+            ),
+          );
+        }
+      }
+
+      markSeason({ seasonNum: sNum, episodeCount: epCount, unwatch });
+    },
+    [markSeason, tracking, addTracking, series.id, visibleSeasons, getReleasedEpisodeCount],
   );
 
   if (visibleSeasons.length === 0) return null;

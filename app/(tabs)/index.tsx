@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import {
   useTrendingSeries,
   usePopularSeries,
-  useTopRatedSeries,
 } from "@/hooks/useSeries";
 import TrendingBanner from "@/components/series/TrendingBanner";
 import SeriesRow from "@/components/series/SeriesRow";
@@ -16,12 +15,11 @@ const colors = Colors.dark;
 export default function HomeScreen() {
   const { data: trending, isLoading: loadingTrending, refetch: refetchTrending } = useTrendingSeries();
   const { data: popular, isLoading: loadingPopular, refetch: refetchPopular } = usePopularSeries();
-  const { data: topRated, isLoading: loadingTopRated, refetch: refetchTopRated } = useTopRatedSeries();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchTrending(), refetchPopular(), refetchTopRated()]);
+    await Promise.all([refetchTrending(), refetchPopular()]);
     setRefreshing(false);
   };
 
@@ -49,25 +47,13 @@ export default function HomeScreen() {
         />
 
         <SeriesRow
-          title="Popular Right Now"
+          title="Popular"
           items={popular?.pages[0]?.results.slice(0, 10)}
           isLoading={loadingPopular}
           onSeeAll={() =>
             router.push({
               pathname: "/series/view-all",
               params: { category: "popular" },
-            })
-          }
-        />
-
-        <SeriesRow
-          title="Top Rated"
-          items={topRated?.pages[0]?.results.slice(0, 10)}
-          isLoading={loadingTopRated}
-          onSeeAll={() =>
-            router.push({
-              pathname: "/series/view-all",
-              params: { category: "top_rated" },
             })
           }
         />
