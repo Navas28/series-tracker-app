@@ -10,6 +10,49 @@ Binge helps TV enthusiasts take control of their watching habits. Search any ser
 
 ---
 
+## Features
+
+- **Series Tracking** — Search and follow TV shows using real-time data from the TVDB API
+- **Episode Management** — Mark individual episodes or full seasons as watched, auto-tracks previous seasons
+- **Watch Progress** — Per-show progress bar, episode counts, total watch time
+- **Custom Playlists** — Organise shows into named playlists
+- **My Series** — Tracked shows grouped as Ongoing, To Finish, and Completed
+- **Password Auth** — Register, email OTP verification, forgot/reset password flow
+---
+
+## Stack
+
+| Layer | Tool |
+|---|---|
+| Framework | React Native + Expo SDK 54 |
+| Navigation | Expo Router v6 (file-based) |
+| Styling | NativeWind v4 (Tailwind CSS) |
+| GraphQL client | Apollo Client v4 |
+| Server state | TanStack Query v5 |
+| Animations | Moti + React Native Reanimated v4 |
+| Icons | Lucide React Native |
+| Language | TypeScript (strict) |
+| Architecture | New Architecture enabled, React Compiler enabled |
+
+---
+
+## Data Flow
+
+The app uses a **dual data path** depending on whether a series is tracked:
+
+| State | Source | Client |
+|---|---|---|
+| Untracked | TVDB API directly | TanStack Query |
+| Tracked | Neon DB via GraphQL | Apollo Client |
+
+When a user tracks a series, the backend fetches and caches the full series data from TVDB into the database. All subsequent reads come from that cache.
+
+---
+
+## TVDB API
+
+Series data (titles, posters, episode lists, air dates, descriptions) is fetched from the **TVDB API** — the largest community-driven TV database. An API key is required to run the project.
+---
 ## Screenshots
 
 <img width="1080" height="2319" alt="login" src="https://github.com/user-attachments/assets/e0342796-cec8-473d-b8d7-5bb1839eed44" />
@@ -20,32 +63,6 @@ Binge helps TV enthusiasts take control of their watching habits. Search any ser
 <img width="717" height="1537" alt="stats" src="https://github.com/user-attachments/assets/5b4e3391-b272-46e9-9b32-f2aff28fb005" />
 
 
----
-
-## Features
-
-- **Series Tracking** — Search and follow TV shows using real-time data from the TVDB API
-- **Episode Management** — Mark individual episodes as watched, track your progress per season
-- **Custom Playlists** — Organise shows into playlists (e.g. Currently Watching, On Hold, Completed)
-- **Watch Statistics** — View total watch hours, episode count, and per-show breakdowns
-- **Firebase Sync** — Data stored and synced securely with Firebase Firestore
-
----
-
-## Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| React Native | Cross-platform mobile UI |
-| Expo | Build toolchain and device APIs |
-| Firebase (Firestore + Auth) | Backend, authentication, real-time data sync |
-| [TVDB API](https://www.thetvdb.com/) | TV series metadata — titles, posters, episode lists, air dates |
-
----
-
-## TVDB API
-
-Series data (titles, posters, episode lists, air dates, descriptions) is fetched from the **TVDB API** — the largest community-driven TV database. An API key is required to run the project.
 
 Get your free API key at [thetvdb.com/api-information](https://www.thetvdb.com/)
 
