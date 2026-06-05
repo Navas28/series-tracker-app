@@ -10,6 +10,8 @@ Binge helps TV enthusiasts take control of their watching habits. Search any ser
 
 ---
 
+Backend Repo [Backend Repository](https://github.com/Navas28/series-tracker-backend)
+---
 ## Features
 
 - **Series Tracking** — Search and follow TV shows using real-time data from the TVDB API
